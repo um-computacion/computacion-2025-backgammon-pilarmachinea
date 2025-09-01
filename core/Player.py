@@ -3,8 +3,8 @@ class Player:
         self.__color__ = color
         self.__nombre__ = nombre
 
-    def obtener_color(self):
+    def color(self):
         return self.__color__
     
-    def obtener_nombre(self):
+    def nombre(self):
         return self.__nombre__

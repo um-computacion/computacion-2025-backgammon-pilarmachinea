@@ -28,4 +28,4 @@ class Board:
         return stack[0].color(), len(stack)
 
     def points(self):
-        return self.__points_
+        return self.__points__ 
