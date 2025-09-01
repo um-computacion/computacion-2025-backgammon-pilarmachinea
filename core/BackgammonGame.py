@@ -1,5 +1,5 @@
-from core.Player import Player
-from core.Dice import Dice
+from Player import Player
+from Dice import Dice
 
 
 class BackgammonGame:
@@ -8,6 +8,9 @@ class BackgammonGame:
         self.__turno__ = "B"
         self.__dice__ = Dice()
 
-        def __turno__(self):
-            return self.__turno__
+    def __turno__(self):
+        return self.__turno__
+    
+    def __players__(self):
+        return dict(self.__players__)
         
