@@ -1,6 +1,6 @@
-from Player import Player
-from Dice import Dice
-from Board import Board
+from .Player import Player
+from .Dice import Dice
+from .Board import Board
 
 class BackgammonGame:
     def __init__(self, player1= "Blancas", player2= "Negras"):

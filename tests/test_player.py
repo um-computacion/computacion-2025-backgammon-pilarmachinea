@@ -9,8 +9,5 @@ class TestPlayer(unittest.TestCase):
         player = Player("negro", "Pepe")
         self.assertEqual(player.obtener_color(), "negro")
 
-
-
-
 if __name__ == '__main__':
     unittest.main()
