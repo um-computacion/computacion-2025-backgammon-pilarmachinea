@@ -1,7 +1,8 @@
-venv/
+.venv/
 /__pycache__/
 __pycache__/
+*.pyc
 tests/__pycache__/
 core/__pycache__/
 .cpython/
-.github/workflows/ci.yml
+
