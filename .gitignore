@@ -4,3 +4,4 @@ __pycache__/
 tests/__pycache__/
 core/__pycache__/
 .cpython/
+.github/workflows/ci.yml
