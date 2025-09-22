@@ -1,5 +1,5 @@
 ## Pregunta 
-hola chat, existe alguna libreria que pueda usar para programar una dado? necesito que tire numeros random de l1 al 6
+hola chat, existe alguna libreria que pueda usar para programar una dado? necesito que tire numeros random de 1 al 6
 ## Respuesta
 Sí, para programar un dado en Python no necesitás ninguna librería extra, podés usar la librería estándar random que ya viene incluida.
 
