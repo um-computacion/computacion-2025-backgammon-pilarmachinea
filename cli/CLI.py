@@ -2,6 +2,23 @@ from core import BackgammonGame
 
 OWNER_ICON = {"B": "B", "N": "N", None: "."}
 
+def index_from_human(n):
+    if not 1 <= n <= 24:
+        raise ValueError("El punto debe estar entre 1 y 24.")
+    return n - 1
+
+def distance_for_move(src_idx, dst_idx, player):
+    # B avanza hacia índices menores; N hacia mayores
+    return (src_idx - dst_idx) if player == "B" else (dst_idx - src_idx)
+
+def consume_die(dice, dist):
+    try:
+        i = dice.index(dist)
+        dice.pop(i)
+        return True
+    except ValueError:
+        return False
+
 def render_board_ascii(game):
     b = game.board()
     top = list(range(23, 11, -1))   # 24..13
@@ -51,8 +68,40 @@ def main():
             rolled = game.roll()
             print(f"Tiraste: {rolled}")
             print(render_board_ascii(game)); continue
+        if cmd.startswith("move"):
+            parts = cmd.split()
+            if len(parts) != 3 or not parts[1].isdigit() or not parts[2].isdigit():
+                print("Uso: move <src> <dst> (1..24)"); continue
 
-        print("Comandos:\nshow, help, roll, quit")
+            src_h, dst_h = int(parts[1]), int(parts[2])
+            dice = game.dice()
+            if not dice:
+                print("Primero tirá los dados con 'roll'."); continue
+
+            src, dst = index_from_human(src_h), index_from_human(dst_h)
+            board = game.board()
+            pts = board.points()
+
+            if not pts[src]:
+                print(f"No hay fichas en {src_h}."); continue
+
+            turn = game.turno()  # "B" o "N"
+            if pts[src][0].color() != turn:
+                print(f"Esa ficha no es tuya. Turno de {turn}."); continue
+
+            dist = distance_for_move(src, dst, turn)
+            if dist <= 0:
+                print("Dirección inválida para tu color."); continue
+
+            if not consume_die(dice, dist):
+                print(f"No tenés el valor {dist} disponible en los dados."); continue
+
+            checker = pts[src].pop()
+            pts[dst].append(checker)
+            print(f"Movida OK: {src_h} -> {dst_h} (usaste {dist}).")
+            print(render_board_ascii(game)); continue
+
+        print("Comandos:\nshow, help, move <src> <dst>, roll, quit")
 
 if __name__ == "__main__":
     main()
