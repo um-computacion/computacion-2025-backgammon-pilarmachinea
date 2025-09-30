@@ -22,8 +22,11 @@ def render_board_ascii(game):
     bot_row = " ".join(cell(i) for i in bottom)
 
     turno = game.turno()
+    dice = game.dice()
+    dice_str = " ".join(str(d) for d in dice) if dice else "(sin tirar)"
+
     return (
-        f"\nTurno: {turno}\n"
+        f"\nTurno: {turno} | Dados: {dice_str}\n"
         f"{line}\n  {top_hdr}\n{line}\n"
         f"| {top_row} |\n{line}\n"
         f"| {bot_row} |\n{line}\n"
@@ -44,7 +47,12 @@ def main():
         if cmd in ("quit", "exit"): print("Chau!"); break
         if cmd == "help": print_help(); continue
         if cmd == "show": print(render_board_ascii(game)); continue
-        print("Comando no reconocido. Escribí 'help'.")
+        if cmd == "roll":
+            rolled = game.roll()
+            print(f"Tiraste: {rolled}")
+            print(render_board_ascii(game)); continue
+
+        print("Comandos:\nshow, help, roll, quit")
 
 if __name__ == "__main__":
     main()
