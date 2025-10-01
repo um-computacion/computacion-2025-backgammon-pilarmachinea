@@ -18,6 +18,11 @@ def consume_die(dice, dist):
     except ValueError:
         return False
 
+def do_hit_if_single(board, dst_idx, player):
+    owner, count = board.point_owner_count(dst_idx)
+    if owner is not None and owner != player and count == 1:
+        board.points()[dst_idx].pop()
+
 def render_board_ascii(game):
     b = game.board()
     top = list(range(23, 11, -1))   # 24..13
@@ -101,6 +106,8 @@ def main():
 
             if not consume_die(dice, dist):
                 print(f"No tenés el valor {dist} disponible en los dados."); continue
+            do_hit_if_single(board, dst, turn)
+
 
             checker = pts[src].pop()
             pts[dst].append(checker)
