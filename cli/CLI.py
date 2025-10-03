@@ -1,6 +1,7 @@
 from core import BackgammonGame
 
 OWNER_ICON = {"B": "B", "N": "N", None: "."}
+HISTORY = []
 
 def index_from_human(n):
     if not 1 <= n <= 24:
@@ -161,6 +162,14 @@ def main():
             print(f"Movida OK: {src_h} -> {dst_h} (usaste {dist}).")
             print(render_board_ascii(game)); continue
 
+        if cmd == "history":
+            if not HISTORY:
+                print("Historial vacío.")
+            else:
+                for i, h in enumerate(HISTORY, 1):
+                    print(f"{i}. {h}")
+            continue
+
         if cmd.startswith("legal"):
             parts = cmd.split()
             if len(parts) != 2 or not parts[1].isdigit():
@@ -181,8 +190,7 @@ def main():
             if not opts:
                 print("No hay destinos válidos con los dados actuales.")
             else:
-                human_opts = ", ".join(f"{index_from_human(1)+dst} (usa {d})" for dst, d in opts)  # corregimos abajo
-                # mejor formateo:
+                human_opts = ", ".join(f"{index_from_human(1)+dst} (usa {d})" for dst, d in opts) 
                 human_opts = ", ".join(f"{dst+1} (con {d})" for dst, d in opts)
                 print(f"Opciones desde {src_h}: {human_opts}")
             continue
