@@ -21,12 +21,23 @@ def consume_die(dice, dist):
 def do_hit_if_single(board, dst_idx, player):
     owner, count = board.point_owner_count(dst_idx)
     if owner is not None and owner != player and count == 1:
-        board.points()[dst_idx].pop()
+        board.points()[dst_idx].pop()  
+
+def prompt_nombres():
+    try:
+        p1 = input("Nombre de Blancas (Enter='Blancas'): ").strip()
+    except (EOFError, KeyboardInterrupt):
+        p1 = ""
+    try:
+        p2 = input("Nombre de Negras  (Enter='Negras'):  ").strip()
+    except (EOFError, KeyboardInterrupt):
+        p2 = ""
+    return (p1 or "Blancas", p2 or "Negras")
 
 def render_board_ascii(game):
     b = game.board()
-    top = list(range(23, 11, -1))   # 24..13
-    bottom = list(range(0, 12, 1))  # 1..12
+    top = list(range(23, 11, -1))   
+    bottom = list(range(0, 12, 1))  
 
     def point_owner_count(idx):
         return b.point_owner_count(idx)
@@ -42,23 +53,42 @@ def render_board_ascii(game):
     top_row = " ".join(cell(i) for i in top)
     bot_row = " ".join(cell(i) for i in bottom)
 
-    turno = game.turno()
+    turno = game.turno()  
+    players = game.players()
+    nombre = players[turno].nombre() if "nombre" in dir(players[turno]) else None
+    quien = nombre or ("Blancas" if turno == "B" else "Negras")
+
     dice = game.dice()
     dice_str = " ".join(str(d) for d in dice) if dice else "(sin tirar)"
     return (
-        f"\nTurno: {turno} | Dados: {dice_str}\n"
+        f"\nTurno: {turno} ({quien}) | Dados: {dice_str}\n"
         f"{line}\n  {top_hdr}\n{line}\n"
         f"| {top_row} |\n{line}\n"
         f"| {bot_row} |\n{line}\n"
         f"  {bot_hdr}\n{line}\n"
+        "Comandos: show, roll, move <src> <dst>, end, help, quit\n"
+        "Notas:\n"
+        " - src/dst en 1..24 (ej: move 24 23)\n"
+        " - bloqueos: no podés entrar a un punto con 2+ del rival\n"
+        " - con 1 rival en destino, se golpea (sin barra por ahora)\n"
     )
 
 def print_help():
-    print("Comandos:\nshow, roll, move <src> <dst>, help, quit")
+    print(
+        "Comandos:\n"
+        "  show               -> muestra tablero\n"
+        "  roll               -> tira los dados\n"
+        "  move <src> <dst>   -> mueve una ficha (1..24)\n"
+        "  end                -> termina el turno (cambia jugador y limpia dados)\n"
+        "  help               -> esta ayuda\n"
+        "  quit/exit          -> salir\n"
+    )
 
 def main():
-    game = BackgammonGame(player1="Blancas", player2="Negras")
+    p1, p2 = prompt_nombres()
+    game = BackgammonGame(player1=p1, player2=p2)
     print(render_board_ascii(game))
+
     while True:
         try:
             cmd = input("> ").strip().lower()
@@ -89,6 +119,7 @@ def main():
             src, dst = index_from_human(src_h), index_from_human(dst_h)
             board = game.board()
             pts = board.points()
+
             if not pts[src]:
                 print(f"No hay fichas en {src_h}."); continue
 
@@ -106,12 +137,17 @@ def main():
 
             if not consume_die(dice, dist):
                 print(f"No tenés el valor {dist} disponible en los dados."); continue
-            do_hit_if_single(board, dst, turn)
 
+            do_hit_if_single(board, dst, turn)
 
             checker = pts[src].pop()
             pts[dst].append(checker)
             print(f"Movida OK: {src_h} -> {dst_h} (usaste {dist}).")
+            print(render_board_ascii(game)); continue
+
+        if cmd == "end":
+            game.end_turn()
+            print("Turno terminado.")
             print(render_board_ascii(game)); continue
 
         print("Comando no reconocido. Escribí 'help'.")
