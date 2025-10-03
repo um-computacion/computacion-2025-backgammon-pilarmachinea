@@ -73,6 +73,22 @@ def render_board_ascii(game):
         " - con 1 rival en destino, se golpea (sin barra por ahora)\n"
     )
 
+def legal_moves_from(board, src, turn, dice_vals):
+    dsts = []
+    for d in sorted(set(dice_vals)):
+        if dice_vals.count(d) == 0:
+            continue
+        if turn == "B":
+            dst = src - d
+        else:
+            dst = src + d
+        if 0 <= dst <= 23:
+            owner_dst, count_dst = board.point_owner_count(dst)
+            if owner_dst is not None and owner_dst != turn and count_dst >= 2:
+                continue
+            dsts.append((dst, d))
+    return dsts
+
 def print_help():
     print(
         "Comandos:\n"
@@ -145,12 +161,39 @@ def main():
             print(f"Movida OK: {src_h} -> {dst_h} (usaste {dist}).")
             print(render_board_ascii(game)); continue
 
+        if cmd.startswith("legal"):
+            parts = cmd.split()
+            if len(parts) != 2 or not parts[1].isdigit():
+                print("Uso: legal <src> (1..24)"); continue
+            src_h = int(parts[1])
+            src = index_from_human(src_h)
+            board = game.board()
+            pts = board.points()
+            if not pts[src]:
+                print(f"No hay fichas en {src_h}."); continue
+            turn = game.turno()
+            if pts[src][0].color() != turn:
+                print(f"Esa ficha no es tuya. Turno de {turn}."); continue
+            dice_vals = list(game.dice() or [])
+            if not dice_vals:
+                print("Primero tirá los dados con 'roll'."); continue
+            opts = legal_moves_from(board, src, turn, dice_vals)
+            if not opts:
+                print("No hay destinos válidos con los dados actuales.")
+            else:
+                human_opts = ", ".join(f"{index_from_human(1)+dst} (usa {d})" for dst, d in opts)  # corregimos abajo
+                # mejor formateo:
+                human_opts = ", ".join(f"{dst+1} (con {d})" for dst, d in opts)
+                print(f"Opciones desde {src_h}: {human_opts}")
+            continue
+
+
         if cmd == "end":
             game.end_turn()
             print("Turno terminado.")
             print(render_board_ascii(game)); continue
 
-        print("Comando no reconocido. Escribí 'help'.")
+    print("Comandos:\nshow, roll, move <src> <dst>, legal <src>, end, help, quit")
 
 if __name__ == "__main__":
     main()
