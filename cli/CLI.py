@@ -24,16 +24,19 @@ def do_hit_if_single(board, dst_idx, player):
     if owner is not None and owner != player and count == 1:
         board.points()[dst_idx].pop()  
 
-def prompt_nombres():
-    try:
-        p1 = input("Nombre de Blancas (Enter='Blancas'): ").strip()
-    except (EOFError, KeyboardInterrupt):
-        p1 = ""
-    try:
-        p2 = input("Nombre de Negras  (Enter='Negras'):  ").strip()
-    except (EOFError, KeyboardInterrupt):
-        p2 = ""
-    return (p1 or "Blancas", p2 or "Negras")
+def legal_moves_from(board, src, turn, dice_vals):
+    dsts = []
+    for d in sorted(set(dice_vals)):
+        if turn == "B":
+            dst = src - d
+        else:
+            dst = src + d
+        if 0 <= dst <= 23:
+            owner_dst, count_dst = board.point_owner_count(dst)
+            if owner_dst is not None and owner_dst != turn and count_dst >= 2:
+                continue
+            dsts.append((dst, d))
+    return dsts
 
 def render_board_ascii(game):
     b = game.board()
@@ -54,7 +57,7 @@ def render_board_ascii(game):
     top_row = " ".join(cell(i) for i in top)
     bot_row = " ".join(cell(i) for i in bottom)
 
-    turno = game.turno()  
+    turno = game.turno()
     players = game.players()
     nombre = players[turno].nombre() if "nombre" in dir(players[turno]) else None
     quien = nombre or ("Blancas" if turno == "B" else "Negras")
@@ -67,39 +70,36 @@ def render_board_ascii(game):
         f"| {top_row} |\n{line}\n"
         f"| {bot_row} |\n{line}\n"
         f"  {bot_hdr}\n{line}\n"
-        "Comandos: show, roll, move <src> <dst>, end, help, quit\n"
+        "Comandos: show(s), roll(r), move(m) <src> <dst>, legal(l) <src>, history, end(e), help(h), quit(q)\n"
         "Notas:\n"
-        " - src/dst en 1..24 (ej: move 24 23)\n"
+        " - src/dst en 1..24 (ej: m 24 23)\n"
         " - bloqueos: no podés entrar a un punto con 2+ del rival\n"
         " - con 1 rival en destino, se golpea (sin barra por ahora)\n"
     )
 
-def legal_moves_from(board, src, turn, dice_vals):
-    dsts = []
-    for d in sorted(set(dice_vals)):
-        if dice_vals.count(d) == 0:
-            continue
-        if turn == "B":
-            dst = src - d
-        else:
-            dst = src + d
-        if 0 <= dst <= 23:
-            owner_dst, count_dst = board.point_owner_count(dst)
-            if owner_dst is not None and owner_dst != turn and count_dst >= 2:
-                continue
-            dsts.append((dst, d))
-    return dsts
-
 def print_help():
     print(
         "Comandos:\n"
-        "  show               -> muestra tablero\n"
-        "  roll               -> tira los dados\n"
-        "  move <src> <dst>   -> mueve una ficha (1..24)\n"
-        "  end                -> termina el turno (cambia jugador y limpia dados)\n"
-        "  help               -> esta ayuda\n"
-        "  quit/exit          -> salir\n"
+        "  show | s                 -> muestra tablero\n"
+        "  roll | r                 -> tira los dados\n"
+        "  move | m <src> <dst>     -> mueve ficha (1..24)\n"
+        "  legal| l <src>           -> sugiere destinos válidos desde <src>\n"
+        "  history                  -> muestra historial de esta sesión\n"
+        "  end  | e                 -> termina el turno (cambia jugador y limpia dados)\n"
+        "  help | h                 -> esta ayuda\n"
+        "  quit | q                 -> salir\n"
     )
+
+def prompt_nombres():
+    try:
+        p1 = input("Nombre de Blancas (Enter='Blancas'): ").strip()
+    except (EOFError, KeyboardInterrupt):
+        p1 = ""
+    try:
+        p2 = input("Nombre de Negras  (Enter='Negras'):  ").strip()
+    except (EOFError, KeyboardInterrupt):
+        p2 = ""
+    return (p1 or "Blancas", p2 or "Negras")
 
 def main():
     p1, p2 = prompt_nombres()
@@ -108,74 +108,50 @@ def main():
 
     while True:
         try:
-            cmd = input("> ").strip().lower()
+            raw = input("> ")
         except (EOFError, KeyboardInterrupt):
             print("\n¡Chau!"); break
 
-        if cmd in ("quit", "exit"):
+        cmd = (raw or "").strip()
+        if not cmd:
+            continue
+        parts = cmd.split()
+        op = parts[0].lower()
+
+        if op == "q": op = "quit"
+        elif op == "h": op = "help"
+        elif op == "s": op = "show"
+        elif op == "r": op = "roll"
+        elif op == "m": op = "move"
+        elif op == "l": op = "legal"
+        elif op == "e": op = "end"
+
+        if op in ("quit", "exit"):
             print("¡Chau!"); break
-        if cmd == "help":
+        if op == "help":
             print_help(); continue
-        if cmd == "show":
+        if op == "show":
             print(render_board_ascii(game)); continue
-        if cmd == "roll":
-            rolled = game.roll()
-            print(f"Tiraste: {rolled}")
-            print(render_board_ascii(game)); continue
-
-        if cmd.startswith("move"):
-            parts = cmd.split()
-            if len(parts) != 3 or not parts[1].isdigit() or not parts[2].isdigit():
-                print("Uso: move <src> <dst> (1..24)"); continue
-
-            src_h, dst_h = int(parts[1]), int(parts[2])
-            dice = game.dice()
-            if not dice:
-                print("Primero tirá los dados con 'roll'."); continue
-
-            src, dst = index_from_human(src_h), index_from_human(dst_h)
-            board = game.board()
-            pts = board.points()
-
-            if not pts[src]:
-                print(f"No hay fichas en {src_h}."); continue
-
-            turn = game.turno()  
-            if pts[src][0].color() != turn:
-                print(f"Esa ficha no es tuya. Turno de {turn}."); continue
-
-            dist = distance_for_move(src, dst, turn)
-            if dist <= 0:
-                print("Dirección inválida para tu color."); continue
-
-            owner_dst, count_dst = board.point_owner_count(dst)
-            if owner_dst is not None and owner_dst != turn and count_dst >= 2:
-                print("Destino bloqueado (2 o más del rival)."); continue
-
-            if not consume_die(dice, dist):
-                print(f"No tenés el valor {dist} disponible en los dados."); continue
-
-            do_hit_if_single(board, dst, turn)
-
-            checker = pts[src].pop()
-            pts[dst].append(checker)
-            print(f"Movida OK: {src_h} -> {dst_h} (usaste {dist}).")
-            print(render_board_ascii(game)); continue
-
-        if cmd == "history":
+        if op == "history":
             if not HISTORY:
                 print("Historial vacío.")
             else:
                 for i, h in enumerate(HISTORY, 1):
                     print(f"{i}. {h}")
             continue
-
-        if cmd.startswith("legal"):
-            parts = cmd.split()
+        if op == "roll":
+            rolled = game.roll()
+            HISTORY.append(f"{game.turno()} tiró: {rolled}")
+            print(f"Tiraste: {rolled}")
+            print(render_board_ascii(game)); continue
+        if op == "legal":
             if len(parts) != 2 or not parts[1].isdigit():
                 print("Uso: legal <src> (1..24)"); continue
             src_h = int(parts[1])
-            src = index_from_human(src_h)
+            try:
+                src = index_from_human(src_h)
+            except ValueError as e:
+                print(e); continue
             board = game.board()
             pts = board.points()
             if not pts[src]:
@@ -190,18 +166,51 @@ def main():
             if not opts:
                 print("No hay destinos válidos con los dados actuales.")
             else:
-                human_opts = ", ".join(f"{index_from_human(1)+dst} (usa {d})" for dst, d in opts) 
                 human_opts = ", ".join(f"{dst+1} (con {d})" for dst, d in opts)
                 print(f"Opciones desde {src_h}: {human_opts}")
             continue
+        if op == "move":
+            if len(parts) != 3 or not parts[1].isdigit() or not parts[2].isdigit():
+                print("Uso: move <src> <dst> (1..24)"); continue
+            src_h, dst_h = int(parts[1]), int(parts[2])
+            dice = game.dice()
+            if not dice:
+                print("Primero tirá los dados con 'roll'."); continue
+            try:
+                src, dst = index_from_human(src_h), index_from_human(dst_h)
+            except ValueError as e:
+                print(e); continue
+            board = game.board()
+            pts = board.points()
+            if not pts[src]:
+                print(f"No hay fichas en {src_h}."); continue
+            turn = game.turno()
+            owner_src = pts[src][0].color()
+            if owner_src != turn:
+                print(f"Esa ficha no es tuya. Turno de {turn}."); continue
+            dist = distance_for_move(src, dst, turn)
+            if dist <= 0:
+                print("Dirección inválida para tu color."); continue
+            owner_dst, count_dst = board.point_owner_count(dst)
+            if owner_dst is not None and owner_dst != turn and count_dst >= 2:
+                print("Destino bloqueado (2 o más del rival)."); continue
+            if not consume_die(dice, dist):
+                print(f"No tenés el valor {dist} disponible en los dados."); continue
 
+            do_hit_if_single(board, dst, turn)
 
-        if cmd == "end":
+            checker = pts[src].pop()
+            pts[dst].append(checker)
+            HISTORY.append(f"{turn} movió {src_h}->{dst_h} (usó {dist})")
+            print(f"Movida OK: {src_h} -> {dst_h} (usaste {dist}).")
+            print(render_board_ascii(game)); continue
+        if op == "end":
             game.end_turn()
+            HISTORY.append("Fin de turno")
             print("Turno terminado.")
             print(render_board_ascii(game)); continue
 
-    print("Comandos:\nshow, roll, move <src> <dst>, legal <src>, end, help, quit")
+        print("Comando no reconocido. Escribí 'help'.")
 
 if __name__ == "__main__":
     main()
