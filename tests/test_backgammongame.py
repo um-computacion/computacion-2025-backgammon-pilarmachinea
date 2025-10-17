@@ -36,14 +36,21 @@ class TestBackgammonGameBasico(unittest.TestCase):
         self.assertEqual(cache, tirada)
         self.assertIsNot(cache, tirada)  # copia
 
-    def test_end_turn_alterna_y_limpia_dados(self):
-        g = BackgammonGame()
-        turno_inicial = g.turno()
-        g.roll()
-        self.assertIn(len(g.dice()), [2, 4])
-        g.end_turn()
-        self.assertNotEqual(g.turno(), turno_inicial)
-        self.assertEqual(g.dice(), [])
+def test_end_turn_alterna_y_limpia_dados(self):
+    g = BackgammonGame()
+    turno_inicial = g.turno()
+    g.roll()
+    self.assertIn(len(g.dice()), [2, 4])
+    while g.available_dice() and g.has_valid_moves():
+        moves = g.get_valid_moves()
+        if moves:
+            from_point, die = moves[0]
+            g.move(from_point, die)
+    
+    result = g.end_turn()
+    self.assertTrue(result)
+    self.assertNotEqual(g.turno(), turno_inicial)
+    self.assertEqual(g.dice(), [])
 
 if __name__ == "__main__":
     unittest.main()

@@ -3,7 +3,7 @@ from .Dice import Dice
 from .Board import Board
 
 class BackgammonGame:
-    def __init__(self, player1= "Blancas", player2= "Negras"):
+    def __init__(self, player1="Blancas", player2="Negras"):
         self.__players__ = {"B": Player("blanco", player1), "N": Player("negro", player2)}
         self.__turno__ = "B"
         self.__dice__ = Dice()
@@ -29,11 +29,21 @@ class BackgammonGame:
         return list(self.__dice_cache__)
 
     def dice(self):
-        available = [d for d in self.__dice_cache__ if d not in self.__used_dice__]
-        for used in self.__used_dice__:
-            if used in available:
-                available.remove(used)
+        """Retorna todos los dados de la tirada actual"""
         return list(self.__dice_cache__)
+    
+    def available_dice(self):
+        """Retorna los dados disponibles (no usados)"""
+        available = []
+        used_copy = list(self.__used_dice__)
+        
+        for die in self.__dice_cache__:
+            if die in used_copy:
+                used_copy.remove(die)
+            else:
+                available.append(die)
+        
+        return available
     
     def move(self, from_point, die_value):
         if die_value not in self.available_dice():
@@ -67,4 +77,3 @@ class BackgammonGame:
         self.__dice_cache__ = []
         self.__used_dice__ = []
         return True
-

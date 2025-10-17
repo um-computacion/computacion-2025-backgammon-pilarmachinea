@@ -1,151 +1,227 @@
+#!/usr/bin/env python3
 """
-Script principal para probar el juego de Backgammon
-Ejecutar desde la raíz del proyecto: python main.py
+Backgammon - Juego de Mesa
+Juego por turnos para 2 jugadores en la terminal
 """
-from core import BackgammonGame
+
+from core.BackgammonGame import BackgammonGame
+
+
+def limpiar_pantalla():
+    """Limpia la pantalla (funciona en Linux/Mac/Windows)"""
+    import os
+    os.system('clear' if os.name == 'posix' else 'cls')
+
 
 def mostrar_tablero(game):
-    """Muestra el estado actual del tablero de forma simple"""
-    print("\n" + "="*60)
-    print(f"Turno de: {game.current_player().nombre()} ({game.turno()})")
-    print("="*60)
-    
+    """Muestra el tablero de backgammon en la terminal"""
     board = game.board()
     
-    # Mostrar bar
+    print("\n" + "="*70)
+    print(" "*25 + "BACKGAMMON")
+    print("="*70)
+    
+    # Mostrar bar (fichas capturadas)
     bar = board.bar()
     if bar['B'] or bar['N']:
-        print(f"BAR -> B: {len(bar['B'])}, N: {len(bar['N'])}")
+        print(f"\nBAR - Blancas: {len(bar['B'])} | Negras: {len(bar['N'])}")
     
-    # Mostrar puntos (mitad superior)
-    print("\nPuntos 12-23:")
+    # Línea superior (puntos 12-23)
+    print("\n" + "-"*70)
+    print("PUNTOS: ", end="")
+    for i in range(12, 24):
+        print(f"{i:3}", end=" ")
+    print()
+    print("-"*70)
+    
+    # Mostrar fichas en puntos superiores (12-23)
     for i in range(12, 24):
         owner, count = board.point_owner_count(i)
         if count > 0:
-            print(f"  Punto {i:2d}: {owner} x{count}")
+            simbolo = "B" if owner == 'B' else "N"
+            print(f"{simbolo}{count:2}", end=" ")
+        else:
+            print("  .", end=" ")
+    print()
     
-    print("\nPuntos 0-11:")
-    for i in range(0, 12):
+    print("\n" + " "*32 + "DADOS")
+    print()
+    
+    # Mostrar fichas en puntos inferiores (11-0)
+    for i in range(11, -1, -1):
         owner, count = board.point_owner_count(i)
         if count > 0:
-            print(f"  Punto {i:2d}: {owner} x{count}")
+            simbolo = "B" if owner == 'B' else "N"
+            print(f"{simbolo}{count:2}", end=" ")
+        else:
+            print("  .", end=" ")
+    print()
     
-    print("="*60 + "\n")
+    # Línea inferior (puntos 0-11)
+    print("-"*70)
+    print("PUNTOS: ", end="")
+    for i in range(11, -1, -1):
+        print(f"{i:3}", end=" ")
+    print()
+    print("-"*70)
 
-def probar_movimientos():
-    """Función de prueba para los movimientos básicos"""
-    print("PROBANDO BACKGAMMON - MOVIMIENTOS\n")
+
+def mostrar_turno(game):
+    """Muestra información del turno actual"""
+    player = game.current_player()
+    color_texto = "BLANCAS" if player.es_blanco() else "NEGRAS"
     
-    game = BackgammonGame("Jugador 1", "Jugador 2")
+    print(f"\nTURNO: {color_texto} ({player.nombre()})")
     
-    print("TABLERO INICIAL:")
-    mostrar_tablero(game)
-    
-    print("Blancas tiran los dados...")
-    dados = game.roll()
-    print(f"   Dados: {dados}")
-    print(f"   Dados disponibles: {game.available_dice()}")
-    
-    movimientos = game.get_valid_moves()
-    print(f"\nMovimientos válidos disponibles: {len(movimientos)}")
-    if movimientos:
-        print("   Primeros 5 movimientos:")
-        for mov in movimientos[:5]:
-            from_point, die = mov
-            if from_point is None:
-                print(f"     - Desde BAR usando dado {die}")
-            else:
-                print(f"     - Desde punto {from_point} usando dado {die}")
-    
+    dados = game.available_dice()
     if dados:
-        print(f"\nIntentando mover desde punto 23 con dado {dados[0]}...")
-        if game.move(23, dados[0]):
-            print("Movimiento exitoso!")
-        else:
-            print("Movimiento inválido")
-        
-        mostrar_tablero(game)
-        print(f"   Dados restantes: {game.available_dice()}")
-    
-    dados_disponibles = game.available_dice()
-    if dados_disponibles:
-        print(f"\nIntentando mover desde punto 12 con dado {dados_disponibles[0]}...")
-        if game.move(12, dados_disponibles[0]):
-            print("Movimiento exitoso!")
-        else:
-            print("Movimiento inválido")
-        
-        mostrar_tablero(game)
-        print(f"   Dados restantes: {game.available_dice()}")
-    
-    print("\nIntentando terminar turno...")
-    if game.can_end_turn():
-        game.end_turn()
-        print("Turno terminado!")
+        print(f"Dados disponibles: {dados}")
     else:
-        print("Aún hay movimientos disponibles, no se puede terminar")
-    
-    print("\n" + "="*60)
-    print("Negras tiran los dados...")
-    dados = game.roll()
-    print(f"   Dados: {dados}")
-    
-    movimientos = game.get_valid_moves()
-    print(f"\nMovimientos válidos disponibles: {len(movimientos)}")
-    
-    mostrar_tablero(game)
-    
-    print("\nPrueba completada")
+        print("No hay dados (presiona 'r' para tirar)")
 
-def probar_captura():
-    """Función para probar la captura de fichas"""
-    print("\n\nPROBANDO CAPTURA DE FICHAS\n")
-    
-    game = BackgammonGame()
-    board = game.board()
-    
-    print("⚙️  Configurando escenario de captura...")
-    print("   (Esto es solo para pruebas, normalmente no harías esto)\n")
-    
-    board.points()[15] = []
-    from core.Checker import Checker
-    board.points()[15].append(Checker('N'))
-    
-    print(f"✓ Punto 15 tiene 1 ficha Negra (blot)")
-    
-    board.points()[18] = []
-    board.points()[18].append(Checker('B'))
-    board.points()[18].append(Checker('B'))
-    
-    print(f"✓ Punto 18 tiene 2 fichas Blancas")
-    
-    mostrar_tablero(game)
-    
-    game._BackgammonGame__dice_cache__ = [3, 5]
-    print(f"Dados simulados: [3, 5]")
-    print(f"\nMoviendo desde punto 18 con dado 3 (debería capturar en punto 15)...")
-    
-    if game.move(18, 3):
-        print("Movimiento y captura exitosos!")
-        mostrar_tablero(game)
-        
-        bar = board.bar()
-        print(f"Fichas en el BAR: B={len(bar['B'])}, N={len(bar['N'])}")
-        
-        if len(bar['N']) > 0:
-            print("¡Ficha negra capturada correctamente!")
-        else:
-            print("ERROR: No se capturó la ficha")
-    else:
-        print("Movimiento falló")
-    
-    print("\nPrueba de captura completada!")
 
-if __name__ == "__main__":
+def mostrar_movimientos_validos(game):
+    """Muestra los movimientos válidos disponibles"""
+    moves = game.get_valid_moves()
+    
+    if not moves:
+        print("\n[X] No hay movimientos válidos disponibles")
+        return
+    
+    print(f"\n[OK] Movimientos válidos disponibles ({len(moves)}):")
+    
+    # Agrupar por punto de origen
+    moves_dict = {}
+    for from_point, die in moves:
+        origen = "BAR" if from_point is None else str(from_point)
+        if origen not in moves_dict:
+            moves_dict[origen] = []
+        moves_dict[origen].append(die)
+    
+    for origen, dados in moves_dict.items():
+        print(f"   Desde {origen}: dados {dados}")
+
+
+def obtener_comando():
+    """Solicita y procesa un comando del usuario"""
+    print("\n" + "-"*70)
+    print("Comandos: [r]oll | [m]over FROM DADO | [v]er movimientos | [t]erminar turno | [q]uit")
+    comando = input(">>> ").strip().lower()
+    return comando
+
+
+def procesar_movimiento(game, comando):
+    """Procesa un comando de movimiento"""
+    partes = comando.split()
+    
+    if len(partes) != 3:
+        print("[X] Formato: m FROM DADO (ejemplo: m 23 3)")
+        print("Para mover desde el bar: m bar 3")
+        return False
+    
+    _, from_str, die_str = partes
+    
     try:
-        probar_movimientos()
-        probar_captura()
+        # Parsear origen
+        if from_str.lower() == 'bar':
+            from_point = None
+        else:
+            from_point = int(from_str)
+            if from_point < 0 or from_point > 23:
+                print("[X] El punto debe estar entre 0 y 23")
+                return False
+        
+        # Parsear dado
+        die_value = int(die_str)
+        if die_value < 1 or die_value > 6:
+            print("[X] El dado debe estar entre 1 y 6")
+            return False
+        
+        # Intentar el movimiento
+        if game.move(from_point, die_value):
+            origen = "BAR" if from_point is None else f"punto {from_point}"
+            print(f"[OK] Movimiento exitoso desde {origen} con dado {die_value}")
+            return True
+        else:
+            print("[X] Movimiento inválido")
+            return False
+            
+    except ValueError:
+        print("[X] Formato inválido. Usa números.")
+        return False
+
+
+def jugar():
+    """Función principal del juego"""
+    print("\n" + "="*70)
+    print(" "*25 + "BACKGAMMON")
+    print("="*70)
+    
+    # Configurar jugadores
+    print("\nNombres de los jugadores? (Enter para usar nombres por defecto)")
+    nombre1 = input("Jugador Blancas: ").strip() or "Blancas"
+    nombre2 = input("Jugador Negras: ").strip() or "Negras"
+    
+    # Crear juego
+    game = BackgammonGame(nombre1, nombre2)
+    
+    jugando = True
+    
+    while jugando:
+        limpiar_pantalla()
+        mostrar_tablero(game)
+        mostrar_turno(game)
+        
+        comando = obtener_comando()
+        
+        # Procesar comando
+        if comando == 'q' or comando == 'quit':
+            print("\nGracias por jugar!")
+            jugando = False
+            
+        elif comando == 'r' or comando == 'roll':
+            if game.available_dice():
+                print("[X] Ya tiraste los dados este turno")
+            else:
+                dados = game.roll()
+                print(f"Tiraste: {dados}")
+            input("\nPresiona Enter para continuar...")
+            
+        elif comando.startswith('m'):
+            procesar_movimiento(game, comando)
+            input("\nPresiona Enter para continuar...")
+            
+        elif comando == 'v' or comando == 'ver':
+            mostrar_movimientos_validos(game)
+            input("\nPresiona Enter para continuar...")
+            
+        elif comando == 't' or comando == 'terminar':
+            if not game.available_dice():
+                print("[X] Debes tirar los dados primero")
+            elif game.has_valid_moves():
+                print("[X] Aún tienes movimientos válidos disponibles")
+                print("Usa 'v' para verlos")
+            else:
+                game.end_turn()
+                print("[OK] Turno terminado")
+            input("\nPresiona Enter para continuar...")
+            
+        else:
+            print("[X] Comando no reconocido")
+            input("\nPresiona Enter para continuar...")
+
+
+def main():
+    """Punto de entrada del programa"""
+    try:
+        jugar()
+    except KeyboardInterrupt:
+        print("\n\nJuego interrumpido! Hasta luego.")
     except Exception as e:
-        print(f"\nERROR: {e}")
+        print(f"\n[ERROR] Error inesperado: {e}")
         import traceback
         traceback.print_exc()
+
+
+if __name__ == "__main__":
+    main()
