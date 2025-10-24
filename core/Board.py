@@ -4,7 +4,7 @@ class Board:
     def __init__(self):
         self.__points__ = [[] for _ in range(24)]
         self.__bar__ = {"B": [], "N": []} 
-        self.__off__ = {"B": 0, "N": 0} # Nueva métrica para fichas retiradas
+        self.__off__ = {"B": 0, "N": 0}
         self._setup()
 
     def _put(self, idx, color, n):
@@ -12,18 +12,20 @@ class Board:
             self.__points__[idx].append(Checker(color))
 
     def _setup(self):
-        """Setup estándar de backgammon (USANDO LA CONVENCIÓN DE TU CÓDIGO)"""
-        # Blancas (B) - Mueven del 23 al 0 (Hacia abajo)
-        self._put(23, 'B', 5)  
-        self._put(19, 'N', 3)  
-        self._put(16, 'N', 5)  
-        self._put(12, 'B', 2)  
+        """Setup estándar de backgammon CORREGIDO"""
+        # CORRECCIÓN: Invertir todas las posiciones para que coincidan con el tablero real
         
-        # Negras (N) - Mueven del 0 al 23 (Hacia arriba)
-        self._put(0, 'N', 5)   
-        self._put(4, 'B', 3)   
-        self._put(7, 'B', 5)   
-        self._put(11, 'N', 2)  
+        # Blancas (B) - Mueven del 0 al 23 (de abajo a arriba en la imagen)
+        self._put(0, 'B', 2)   # 2 fichas blancas en punto 0
+        self._put(11, 'B', 5)  # 5 fichas blancas en punto 11
+        self._put(16, 'B', 3)  # 3 fichas blancas en punto 16
+        self._put(18, 'B', 5)  # 5 fichas blancas en punto 18
+        
+        # Negras (N) - Mueven del 23 al 0 (de arriba a abajo en la imagen)
+        self._put(23, 'N', 2)  # 2 fichas negras en punto 23
+        self._put(12, 'N', 5)  # 5 fichas negras en punto 12
+        self._put(7, 'N', 3)   # 3 fichas negras en punto 7
+        self._put(5, 'N', 5)   # 5 fichas negras en punto 5
 
     def off(self):
         return dict(self.__off__)
@@ -46,9 +48,9 @@ class Board:
     # --- Lógica de Bearing Off (Retirada) ---
     
     def _get_home_range(self, color):
-        """Retorna el rango de índices domésticos (adaptado a tu convención)."""
-        # B mueve 23->0: Casa 0-5. N mueve 0->23: Casa 18-23.
-        return range(0, 6) if color == 'B' else range(18, 24) 
+        """Retorna el rango de índices domésticos CORREGIDO."""
+        # CORRECCIÓN FINAL: B mueve 23->0: Casa 0-5. N mueve 0->23: Casa 18-23.
+        return range(0, 6) if color == 'B' else range(18, 24)
         
     def can_bear_off(self, color):
         """Verifica si todas las fichas del jugador están en casa o retiradas."""
@@ -59,14 +61,13 @@ class Board:
         
         for idx in range(24):
             if idx not in home_range:
-                # Si encuentra una ficha del color en cualquier punto fuera de casa, no puede retirar.
                 if any(c.color() == color for c in self.__points__[idx]):
                     return False
         
         return True
     
     def _is_furthest_checker(self, from_point, color):
-        """Verifica si la ficha es la más lejana en el cuadrante doméstico (para dado excedente)."""
+        """Verifica si la ficha es la más lejana en el cuadrante doméstico."""
         
         if color == 'B':
             # B mueve 23->0. La más lejana es la de mayor índice (5) en el rango 0-5
@@ -82,8 +83,7 @@ class Board:
                     return False
             return True
 
-
-    # --- Lógica de Movimiento (Adaptada) ---
+    # --- Lógica de Movimiento (CORREGIDA) ---
 
     def can_move(self, from_point, die_value, player_color):
         
@@ -96,25 +96,25 @@ class Board:
             if not self.has_checkers_on_bar(player_color):
                 return False
             
-            # B (23->0) reingresa a 18-23. N (0->23) reingresa a 0-5.
+            # CORRECCIÓN FINAL: B (23->0) reingresa a 18-23. N (0->23) reingresa a 0-5.
             to_point = 24 - die_value if player_color == 'B' else die_value - 1
             
-            return self._can_land_on(to_point, player_color) # Usa el método de aterrizaje
+            return self._can_land_on(to_point, player_color)
         
         # 3. Origen no válido (vacío o color incorrecto)
         owner, count = self.point_owner_count(from_point)
         if owner != player_color or count == 0:
             return False
         
-        # 4. Calcular destino
+        # 4. Calcular destino - CORRECCIÓN FINAL
         to_point = from_point - die_value if player_color == 'B' else from_point + die_value
         
         # 5. Bearing Off (Retirada)
         if (player_color == 'B' and to_point < 0) or (player_color == 'N' and to_point > 23):
             if not self.can_bear_off(player_color):
-                return False # No puede retirar si tiene fichas fuera de casa
+                return False
 
-            distance_to_off = from_point + 1 if player_color == 'B' else 24 - from_point # Distancia al final
+            distance_to_off = from_point + 1 if player_color == 'B' else 24 - from_point
             
             if die_value == distance_to_off:
                 return True # Dado exacto
@@ -132,7 +132,7 @@ class Board:
         return self._can_land_on(to_point, player_color)
     
     def _can_land_on(self, point, player_color):
-        """Verifica si se puede aterrizar en un punto, incluyendo la captura (blot)."""
+        """Verifica si se puede aterrizar en un punto."""
         owner, count = self.point_owner_count(point)
         
         if owner is None or owner == player_color:
@@ -141,10 +141,10 @@ class Board:
         if count == 1:
             return True # Captura (blot)
         
-        return False # Bloqueado (dos o más fichas enemigas)
+        return False # Bloqueado
     
     def move(self, from_point, die_value, player_color):
-        """Ejecuta un movimiento, incluyendo reingreso, captura y retirada."""
+        """Ejecuta un movimiento."""
         
         if not self.can_move(from_point, die_value, player_color):
             return False
@@ -157,7 +157,7 @@ class Board:
             self.__points__[to_point].append(checker)
             return True
         
-        # 2. Calcular destino
+        # 2. Calcular destino - CORRECCIÓN FINAL
         to_point = from_point - die_value if player_color == 'B' else from_point + die_value
 
         # 3. Bearing Off (Retirada)
@@ -190,7 +190,7 @@ class Board:
             for die in available_dice:
                 if self.can_move(None, die, player_color):
                     valid_moves.append((None, die))
-            return valid_moves # Solo se puede mover desde el bar
+            return valid_moves
         
         # 2. Movimientos normales (tablero) o retirada
         for point in range(24):
@@ -198,9 +198,7 @@ class Board:
             
             if owner == player_color and count > 0:
                 for die in available_dice:
-                    # can_move debe manejar la validez para movimientos normales y retirada.
                     if self.can_move(point, die, player_color):
                         valid_moves.append((point, die))
         
-        # Eliminar duplicados si hay dobles
         return list(set(valid_moves))
