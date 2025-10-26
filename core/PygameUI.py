@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Backgammon con Pygame - Interfaz gráfica
+Layout estándar de backgammon
 """
 
 import pygame
@@ -17,11 +18,12 @@ VERDE = (34, 139, 34)
 AZUL = (70, 130, 180)
 GRIS = (128, 128, 128)
 ROJO = (255, 0, 0)
+AMARILLO = (255, 215, 0)
 
 # Constantes del tablero
 ANCHO_VENTANA = 1200
-ALTO_VENTANA = 1000  # AUMENTADO para que se vean todas las instrucciones
-MARGEN = 120  # AUMENTADO para que quepa el área OFF a la izquierda
+ALTO_VENTANA = 1150
+MARGEN = 120
 ANCHO_TABLERO = ANCHO_VENTANA - 2 * MARGEN
 ALTO_TABLERO = 600
 ANCHO_PUNTO = ANCHO_TABLERO // 14
@@ -32,7 +34,7 @@ RADIO_FICHA = 25
 TABLERO_X = MARGEN
 TABLERO_Y = MARGEN
 BAR_X = TABLERO_X + 6 * ANCHO_PUNTO + ANCHO_PUNTO // 2
-OFF_X = TABLERO_X - ANCHO_PUNTO - 10  # CORREGIDO: A la IZQUIERDA del tablero
+OFF_X = TABLERO_X - ANCHO_PUNTO - 10
 OFF_WIDTH = ANCHO_PUNTO - 20
 
 class BackgammonUI:
@@ -45,38 +47,48 @@ class BackgammonUI:
         self.font = pygame.font.Font(None, 36)
         
         self.punto_seleccionado = None
-        self.movimientos_validos = []
+        self.dado_seleccionado = None
 
     def punto_a_coords(self, idx):
-        """Mapea el índice de un punto (0-23) a las coordenadas del centro de su base."""
+        """
+        Mapea índice (0-23) a coordenadas visuales.
+        Layout estándar:
         
-        # CORRECCIÓN: Invertir el orden dentro de cada cuadrante
+        ARRIBA:   13-18 | BAR | 19-24
+        ABAJO:    12-7  | BAR |  6-1
+        """
         
-        # Puntos 0-11 van ARRIBA
-        if idx in range(0, 6):
-            # Arriba, IZQUIERDA - INVERTIDO (0 a la izquierda, 5 a la derecha)
-            x = BAR_X + ANCHO_PUNTO + (5 - idx) * ANCHO_PUNTO + ANCHO_PUNTO // 2
+        # ARRIBA IZQUIERDA: idx 12-17 → puntos 13-18
+        if 12 <= idx <= 17:
+            col = idx - 12  # 0 a 5
+            x = TABLERO_X + col * ANCHO_PUNTO + ANCHO_PUNTO // 2
             y = TABLERO_Y
-        elif idx in range(6, 12):
-            # Arriba, DERECHA - INVERTIDO (6 a la derecha, 11 a la izquierda)
-            x = TABLERO_X + (11 - idx) * ANCHO_PUNTO + ANCHO_PUNTO // 2
+            
+        # ARRIBA DERECHA: idx 18-23 → puntos 19-24
+        elif 18 <= idx <= 23:
+            col = idx - 18  # 0 a 5
+            x = BAR_X + ANCHO_PUNTO + col * ANCHO_PUNTO + ANCHO_PUNTO // 2
             y = TABLERO_Y
-        
-        # Puntos 12-23 van ABAJO
-        elif idx in range(12, 18):
-            # Abajo, DERECHA - INVERTIDO (12 a la izquierda, 17 a la derecha)
-            x = TABLERO_X + (idx - 12) * ANCHO_PUNTO + ANCHO_PUNTO // 2
+            
+        # ABAJO IZQUIERDA: idx 11-6 → puntos 12-7
+        elif 6 <= idx <= 11:
+            col = 11 - idx  # 0 a 5
+            x = TABLERO_X + col * ANCHO_PUNTO + ANCHO_PUNTO // 2
             y = TABLERO_Y + ALTO_TABLERO
-        elif idx in range(18, 24):
-            # Abajo, IZQUIERDA - INVERTIDO (18 a la derecha, 23 a la izquierda)
-            x = BAR_X + ANCHO_PUNTO + (idx - 18) * ANCHO_PUNTO + ANCHO_PUNTO // 2
+            
+        # ABAJO DERECHA: idx 5-0 → puntos 6-1
+        elif 0 <= idx <= 5:
+            col = 5 - idx  # 0 a 5
+            x = BAR_X + ANCHO_PUNTO + col * ANCHO_PUNTO + ANCHO_PUNTO // 2
             y = TABLERO_Y + ALTO_TABLERO
+            
         else:
             return None
+            
         return x, y
 
     def coords_a_punto(self, x, y):
-        """Mapea coordenadas de click al índice de un punto (0-23)."""
+        """Mapea coordenadas de click al índice de un punto."""
         x_rel = x - TABLERO_X
         y_rel = y - TABLERO_Y
 
@@ -84,23 +96,23 @@ class BackgammonUI:
             return None
 
         # Determinar si está arriba o abajo
-        if y_rel < ALTO_TABLERO // 2:  # Arriba (puntos 0-11)
-            if x_rel < 6 * ANCHO_PUNTO:  # Lado DERECHO (6-11)
+        if y_rel < ALTO_TABLERO // 2:  # ARRIBA
+            if x_rel < 6 * ANCHO_PUNTO:  # IZQUIERDA (13-18)
                 col = x_rel // ANCHO_PUNTO
-                idx = 11 - col  # INVERTIDO
-            elif x_rel > 6 * ANCHO_PUNTO + ANCHO_PUNTO:  # Lado IZQUIERDO (0-5)
+                idx = 12 + col
+            elif x_rel > 6 * ANCHO_PUNTO + ANCHO_PUNTO:  # DERECHA (19-24)
                 col = (x_rel - ANCHO_PUNTO * 7) // ANCHO_PUNTO
-                idx = 5 - col  # INVERTIDO
+                idx = 18 + col
             else:
                 return None  # Barra
                 
-        else:  # Abajo (puntos 12-23)
-            if x_rel < 6 * ANCHO_PUNTO:  # Lado DERECHO (12-17)
+        else:  # ABAJO
+            if x_rel < 6 * ANCHO_PUNTO:  # IZQUIERDA (12-7)
                 col = x_rel // ANCHO_PUNTO
-                idx = 12 + col  # Normal
-            elif x_rel > 6 * ANCHO_PUNTO + ANCHO_PUNTO:  # Lado IZQUIERDO (18-23)
+                idx = 11 - col
+            elif x_rel > 6 * ANCHO_PUNTO + ANCHO_PUNTO:  # DERECHA (6-1)
                 col = (x_rel - ANCHO_PUNTO * 7) // ANCHO_PUNTO
-                idx = 18 + col  # Normal
+                idx = 5 - col
             else:
                 return None  # Barra
                 
@@ -119,6 +131,30 @@ class BackgammonUI:
         return OFF_X <= x <= OFF_X + OFF_WIDTH and \
                TABLERO_Y <= y <= TABLERO_Y + ALTO_TABLERO
 
+    def get_dado_at_pos(self, x, y):
+        """Retorna el valor del dado en la posición del click, o None."""
+        dice = self.game.dice()
+        disponibles = self.game.available_dice()
+        
+        if not dice:
+            return None
+            
+        dado_size = 50
+        espacio_entre_dados = 15
+        total_width = len(dice) * dado_size + (len(dice) - 1) * espacio_entre_dados
+        x_base = ANCHO_VENTANA // 2 - total_width // 2
+        y_base = TABLERO_Y + ALTO_TABLERO + 50
+        
+        for i, die_val in enumerate(dice):
+            dado_x = x_base + i * (dado_size + espacio_entre_dados)
+            dado_y = y_base
+            
+            if dado_x <= x <= dado_x + dado_size and dado_y <= y <= dado_y + dado_size:
+                if die_val in disponibles:
+                    return die_val
+                    
+        return None
+
     def dibujar_tablero(self):
         """Dibuja el marco y los triángulos del tablero."""
         self.screen.fill(BEIGE)
@@ -127,20 +163,24 @@ class BackgammonUI:
         pygame.draw.rect(self.screen, MARRON_OSCURO, 
                          (TABLERO_X, TABLERO_Y, ANCHO_TABLERO, ALTO_TABLERO), 5)
 
-        # Triángulos (puntos)
+        # Triángulos
         for i in range(24):
-            x, y = self.punto_a_coords(i)
+            coords = self.punto_a_coords(i)
+            if coords is None:
+                continue
+            x, y = coords
             color_punto = MARRON_CLARO if i % 2 == 0 else MARRON_OSCURO
             
-            # Puntos 0-11 están arriba, apuntando hacia ABAJO
-            if i in range(0, 12):
-                puntos = [(x - ANCHO_PUNTO // 2, y),  # Base izquierda
-                          (x + ANCHO_PUNTO // 2, y),  # Base derecha
-                          (x, y + ALTO_PUNTO)]        # Punta hacia abajo
-            else:  # Puntos 12-23 están abajo, apuntando hacia ARRIBA
-                puntos = [(x - ANCHO_PUNTO // 2, y),  # Base izquierda
-                          (x + ANCHO_PUNTO // 2, y),  # Base derecha
-                          (x, y - ALTO_PUNTO)]        # Punta hacia arriba
+            # TODOS los triángulos de ARRIBA (12-23) apuntan ↓ HACIA ABAJO
+            if 12 <= i <= 23:
+                puntos = [(x - ANCHO_PUNTO // 2, y),      # Base izquierda
+                          (x + ANCHO_PUNTO // 2, y),      # Base derecha
+                          (x, y + ALTO_PUNTO)]            # Punta hacia abajo
+            # TODOS los triángulos de ABAJO (0-11) apuntan ↑ HACIA ARRIBA
+            else:
+                puntos = [(x - ANCHO_PUNTO // 2, y),      # Base izquierda
+                          (x + ANCHO_PUNTO // 2, y),      # Base derecha
+                          (x, y - ALTO_PUNTO)]            # Punta hacia arriba
             
             pygame.draw.polygon(self.screen, color_punto, puntos)
 
@@ -148,7 +188,7 @@ class BackgammonUI:
         pygame.draw.line(self.screen, MARRON_OSCURO, 
                          (BAR_X, TABLERO_Y), (BAR_X, TABLERO_Y + ALTO_TABLERO), ANCHO_PUNTO)
         
-        # Área de Retirada (Off)
+        # Área de Retirada
         pygame.draw.rect(self.screen, GRIS, 
                          (OFF_X, TABLERO_Y, OFF_WIDTH, ALTO_TABLERO), 0)
         pygame.draw.rect(self.screen, MARRON_OSCURO, 
@@ -159,16 +199,22 @@ class BackgammonUI:
         
         # Dibujar fichas en los puntos
         for i in range(24):
-            x, y = self.punto_a_coords(i)
+            coords = self.punto_a_coords(i)
+            if coords is None:
+                continue
+            x, y = coords
             stack = self.game.board().points()[i]
             
             for j, checker in enumerate(stack):
                 color = BLANCO if checker.color() == 'B' else NEGRO
                 
-                # Calcular posición Y de la ficha
-                if i in range(0, 12):  # Arriba (stack crece hacia abajo)
+                # Triángulos ARRIBA (12-23): apuntan ↓ hacia abajo
+                # Fichas crecen desde punta hacia base
+                if 12 <= i <= 23:
                     y_centro = y + ALTO_PUNTO - RADIO_FICHA - j * 2 * RADIO_FICHA
-                else:  # Abajo (stack crece hacia arriba)
+                # Triángulos ABAJO (0-11): apuntan ↑ hacia arriba
+                # Fichas crecen desde punta hacia base
+                else:
                     y_centro = y - ALTO_PUNTO + RADIO_FICHA + j * 2 * RADIO_FICHA
                 
                 pygame.draw.circle(self.screen, color, (int(x), int(y_centro)), RADIO_FICHA)
@@ -176,19 +222,17 @@ class BackgammonUI:
 
         # Dibujar fichas en la Barra
         bar = self.game.board().bar()
-        # CORRECCIÓN: Fichas blancas en la barra (arriba, lado izquierdo de la barra)
         if bar['B']:
             for j, _ in enumerate(bar['B']):
                 y_centro = TABLERO_Y + 30 + j * 2 * RADIO_FICHA
-                x_centro = BAR_X - 20  # Lado izquierdo de la barra
+                x_centro = BAR_X - 20
                 pygame.draw.circle(self.screen, BLANCO, (int(x_centro), int(y_centro)), RADIO_FICHA)
                 pygame.draw.circle(self.screen, MARRON_OSCURO, (int(x_centro), int(y_centro)), RADIO_FICHA, 2)
         
-        # CORRECCIÓN: Fichas negras en la barra (abajo, lado izquierdo de la barra)        
         if bar['N']:
             for j, _ in enumerate(bar['N']):
                 y_centro = TABLERO_Y + ALTO_TABLERO - 30 - j * 2 * RADIO_FICHA
-                x_centro = BAR_X - 20  # Lado izquierdo de la barra
+                x_centro = BAR_X - 20
                 pygame.draw.circle(self.screen, NEGRO, (int(x_centro), int(y_centro)), RADIO_FICHA)
                 pygame.draw.circle(self.screen, MARRON_OSCURO, (int(x_centro), int(y_centro)), RADIO_FICHA, 2)
 
@@ -222,7 +266,13 @@ class BackgammonUI:
                 x = x_base + i * (dado_size + espacio_entre_dados)
                 y = y_base
                 
-                die_color = VERDE if die_val in disponibles else GRIS
+                # Color del dado según estado
+                if self.dado_seleccionado == die_val and die_val in disponibles:
+                    die_color = AMARILLO
+                elif die_val in disponibles:
+                    die_color = VERDE
+                else:
+                    die_color = GRIS
                 
                 pygame.draw.rect(self.screen, die_color, (x, y, dado_size, dado_size), 0, 5)
                 pygame.draw.rect(self.screen, NEGRO, (x, y, dado_size, dado_size), 2, 5)
@@ -235,24 +285,22 @@ class BackgammonUI:
         """Muestra información del turno y el juego."""
         color_turno = "BLANCAS" if self.game.turno() == 'B' else "NEGRAS"
         color_rgb = BLANCO if self.game.turno() == 'B' else NEGRO
+        
+        jugador_actual = self.game.current_player()
+        nombre_jugador = jugador_actual.nombre()
 
         # Instrucciones dinámicas arriba
         if not self.game.dice():
             text_instruccion = self.font.render("Presiona ESPACIO para tirar dados", True, AZUL)
-            rect_instruccion = text_instruccion.get_rect(center=(ANCHO_VENTANA // 2, TABLERO_Y - 20))
-            self.screen.blit(text_instruccion, rect_instruccion)
-        elif self.punto_seleccionado is None and self.game.dice():
-            text_instruccion = self.font.render("Selecciona una de tus fichas", True, VERDE)
-            rect_instruccion = text_instruccion.get_rect(center=(ANCHO_VENTANA // 2, TABLERO_Y - 20))
-            self.screen.blit(text_instruccion, rect_instruccion)
-        elif self.punto_seleccionado is not None:
-            text_instruccion = self.font.render("Ahora selecciona el destino", True, VERDE)
-            rect_instruccion = text_instruccion.get_rect(center=(ANCHO_VENTANA // 2, TABLERO_Y - 20))
-            self.screen.blit(text_instruccion, rect_instruccion)
-        elif self.game.can_end_turn():
+        elif self.punto_seleccionado is None:
+            text_instruccion = self.font.render("1. Selecciona una de tus fichas", True, VERDE)
+        elif self.dado_seleccionado is None:
+            text_instruccion = self.font.render("2. Ahora haz CLICK en un DADO", True, AMARILLO)
+        else:
             text_instruccion = self.font.render("Presiona ESPACIO para terminar turno", True, AZUL)
-            rect_instruccion = text_instruccion.get_rect(center=(ANCHO_VENTANA // 2, TABLERO_Y - 20))
-            self.screen.blit(text_instruccion, rect_instruccion)
+            
+        rect_instruccion = text_instruccion.get_rect(center=(ANCHO_VENTANA // 2, TABLERO_Y - 20))
+        self.screen.blit(text_instruccion, rect_instruccion)
         
         # Info de retiradas y turno
         off_B = self.game.board().off()['B']
@@ -260,7 +308,7 @@ class BackgammonUI:
         text_off = self.font.render(f"Retiradas - B: {off_B} | N: {off_N}", True, MARRON_OSCURO)
         self.screen.blit(text_off, (ANCHO_VENTANA - text_off.get_width() - 20, TABLERO_Y + ALTO_TABLERO + 120))
 
-        text_turno = self.font.render(f"Turno: {color_turno}", True, color_rgb)
+        text_turno = self.font.render(f"Turno: {color_turno} ({nombre_jugador})", True, color_rgb)
         self.screen.blit(text_turno, (20, TABLERO_Y + ALTO_TABLERO + 120))
 
         # Instrucciones
@@ -268,12 +316,12 @@ class BackgammonUI:
         instrucciones = [
             "CÓMO JUGAR:",
             "1. Presiona ESPACIO para tirar los dados",
-            "2. Haz CLICK en una de tus fichas (origen)",
-            "3. Haz CLICK en el punto de destino",
-            "4. El juego usa automáticamente el dado correcto",
-            "• Dados VERDES = disponibles | Dados GRISES = ya usados",
-            "• Blancas mueven de derecha a izquierda (23→0)",
-            "• Negras mueven de izquierda a derecha (0→23)",
+            "2. Haz CLICK en una de tus fichas (o en el BAR si tienes ahí)",
+            "3. Haz CLICK en el DADO que quieres usar",
+            "4. La ficha se moverá automáticamente esa cantidad",
+            "• Dados VERDES = disponibles | AMARILLO = seleccionado | GRISES = usados",
+            "• Blancas: 24→1 (horario) | Negras: 1→24 (antihorario)",
+            "• Todos los triángulos ARRIBA ↓ | Todos los triángulos ABAJO ↑",
         ]
         
         y_inicial = TABLERO_Y + ALTO_TABLERO + 160
@@ -301,88 +349,54 @@ class BackgammonUI:
         if not self.game.dice():
             self.game.roll()
             self.punto_seleccionado = None
+            self.dado_seleccionado = None
         elif not self.game.available_dice() or not self.game.has_valid_moves():
             if self.game.can_end_turn():
                 self.game.end_turn()
                 self.punto_seleccionado = None
+                self.dado_seleccionado = None
 
-    def manejar_click_punto(self, x, y):
-        """Maneja el click en los puntos del tablero."""
+    def manejar_click(self, x, y):
+        """Maneja todos los clicks del mouse."""
         
-        punto_idx = self.coords_a_punto(x, y)
-        if punto_idx is None:
-            if self.es_area_bar(x, y):
-                punto_idx = "bar"
-            elif self.es_area_off(x, y):
-                punto_idx = 24 
-            else:
-                self.punto_seleccionado = None
-                return
-
-        if not self.game.dice():
-            self.punto_seleccionado = None
+        if self.game.is_game_over():
             return
-
-        # Si NO hay ficha seleccionada, intentar seleccionar
+            
+        if not self.game.dice():
+            return
+        
+        # Si NO hay ficha seleccionada, intentar seleccionar ficha
         if self.punto_seleccionado is None:
-            # Verificar que hay una ficha del jugador actual
-            if punto_idx == "bar":
-                if self.game.board().has_checkers_on_bar(self.game.turno()):
-                    self.punto_seleccionado = "bar"
-            elif punto_idx in range(24):
+            punto_idx = self.coords_a_punto(x, y)
+            
+            if punto_idx is None:
+                if self.es_area_bar(x, y):
+                    if self.game.board().has_checkers_on_bar(self.game.turno()):
+                        self.punto_seleccionado = "bar"
+                        self.dado_seleccionado = None
+                return
+            
+            if punto_idx in range(24):
                 owner, count = self.game.board().point_owner_count(punto_idx)
-                # CORRECCIÓN CRÍTICA: Solo permite seleccionar fichas del turno actual
                 if owner == self.game.turno() and count > 0:
                     self.punto_seleccionado = punto_idx
+                    self.dado_seleccionado = None
             return
         
-        # Si YA hay ficha seleccionada, intentar mover
-        origen = self.punto_seleccionado
-        destino = punto_idx
+        # Si hay ficha seleccionada pero NO hay dado seleccionado
+        if self.dado_seleccionado is None:
+            dado_clickeado = self.get_dado_at_pos(x, y)
+            if dado_clickeado is not None:
+                if self.game.can_move(self.punto_seleccionado, dado_clickeado):
+                    self.dado_seleccionado = dado_clickeado
+            return
         
-        # CORRECCIÓN: Calcular la distancia y encontrar el dado correcto
-        movimiento_realizado = False
-        
-        # Intentar con cada dado disponible
-        for die_val in self.game.available_dice():
-            # Verificar si este dado permite el movimiento
-            if origen == "bar":
-                # Movimiento desde la barra
-                if self.game.can_move(None, die_val):
-                    # Calcular destino esperado
-                    destino_esperado = 24 - die_val if self.game.turno() == 'B' else die_val - 1
-                    if destino == destino_esperado:
-                        if self.game.move(None, die_val):
-                            movimiento_realizado = True
-                            break
-            elif destino == 24:
-                # Bearing off (retirada)
-                if self.game.can_move(origen, die_val):
-                    if self.game.move(origen, die_val):
-                        movimiento_realizado = True
-                        break
-            elif destino in range(24):
-                # Movimiento normal
-                # CORRECCIÓN: Calcular la distancia según la dirección del jugador
-                if self.game.turno() == 'B':
-                    # Blancas mueven de 23 -> 0 (restando)
-                    distancia = origen - destino
-                else:
-                    # Negras mueven de 0 -> 23 (sumando)
-                    distancia = destino - origen
-                
-                # Verificar que la distancia sea positiva y coincida con un dado
-                if distancia > 0 and distancia == die_val:
-                    if self.game.can_move(origen, die_val):
-                        if self.game.move(origen, die_val):
-                            movimiento_realizado = True
-                            break
-        
-        if movimiento_realizado:
+        # Si hay ficha Y dado seleccionado, ejecutar el movimiento
+        if self.punto_seleccionado is not None and self.dado_seleccionado is not None:
+            if self.game.move(self.punto_seleccionado, self.dado_seleccionado):
+                pass
             self.punto_seleccionado = None
-        else:
-            # Si no se pudo mover, deseleccionar
-            self.punto_seleccionado = None
+            self.dado_seleccionado = None
 
     def run(self):
         """Bucle principal de Pygame."""
@@ -397,7 +411,14 @@ class BackgammonUI:
                         self.manejar_espacio()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     x, y = event.pos
-                    self.manejar_click_punto(x, y)
+                    self.manejar_click(x, y)
+                    
+            # Ejecutar movimiento si hay ficha y dado seleccionado
+            if self.punto_seleccionado is not None and self.dado_seleccionado is not None:
+                if self.game.move(self.punto_seleccionado, self.dado_seleccionado):
+                    pass
+                self.punto_seleccionado = None
+                self.dado_seleccionado = None
 
             self.dibujar_tablero()
             self.dibujar_fichas()
@@ -415,16 +436,14 @@ class BackgammonUI:
                 if coords:
                     x, y = coords
                     
-                    if self.punto_seleccionado in range(0, 12):
+                    # ARRIBA (12-23): fichas están en punta hacia abajo
+                    if 12 <= self.punto_seleccionado <= 23:
                         y_center = y + ALTO_PUNTO - RADIO_FICHA
+                    # ABAJO (0-11): fichas están en punta hacia arriba
                     else:
                         y_center = y - ALTO_PUNTO + RADIO_FICHA
                         
                     pygame.draw.circle(self.screen, VERDE, (int(x), int(y_center)), RADIO_FICHA + 3, 3)
-            
-            elif self.punto_seleccionado == 24:
-                 pygame.draw.rect(self.screen, VERDE, 
-                         (OFF_X, TABLERO_Y, OFF_WIDTH, ALTO_TABLERO), 4)
             
             pygame.display.flip()
             self.clock.tick(60)
