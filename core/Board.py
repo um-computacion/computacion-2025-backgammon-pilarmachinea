@@ -12,11 +12,11 @@ class Board:
             self.__points__[idx].append(Checker(color))
 
     def _setup(self):
-        """Setup estÃ¡ndar de backgammon.
+        """Setup estÃƒÂ¡ndar de backgammon.
         Blancas: 24(2), 13(5), 8(3), 6(5)
         Negras: 1(2), 12(5), 17(3), 19(5)
         """
-        # Ãndices 0-based (punto 1 = idx 0, punto 24 = idx 23)
+        # ÃƒÂndices 0-based (punto 1 = idx 0, punto 24 = idx 23)
         self._put(0, 'B', 2)    # punto 1
         self._put(11, 'B', 5)   # punto 12
         self._put(16, 'B', 3)   # punto 17
@@ -51,7 +51,7 @@ class Board:
         return range(18, 24) if color == 'B' else range(0, 6)
 
     def can_bear_off(self, color):
-        """Verifica si todas las fichas estÃ¡n en casa o fuera."""
+        """Verifica si todas las fichas estÃƒÂ¡n en casa o fuera."""
         if self.has_checkers_on_bar(color):
             return False
             
@@ -74,15 +74,15 @@ class Board:
         return count == 1  # Puede capturar si hay solo 1 ficha rival
 
     def _is_furthest_checker(self, from_point, color):
-        """Verifica si la ficha es la más lejana en casa."""
+        """Verifica si la ficha es la mÃ¡s lejana en casa."""
         if color == 'B':
-            # Blancas casa 18-23. La más lejana es idx 18
+            # Blancas casa 18-23. La mÃ¡s lejana es idx 18
             for idx in range(18, from_point):
                 if any(c.color() == color for c in self.__points__[idx]):
                     return False
             return True
         else:
-            # Negras casa 0-5. La más lejana es idx 5
+            # Negras casa 0-5. La mÃ¡s lejana es idx 5
             for idx in range(from_point + 1, 6):
                 if any(c.color() == color for c in self.__points__[idx]):
                     return False
@@ -91,11 +91,15 @@ class Board:
     def can_move(self, from_point, die_value, player_color):
         """Verifica si un movimiento es legal."""
         
-        # 1. Verificar que el dado sea vÃ¡lido
+        # 1. Verificar que el dado sea vÃƒÂ¡lido
         if not (1 <= die_value <= 6):
             return False
         
-        # 2. Reingreso desde la barra
+        # 2. REGLA CRÍTICA: Si hay fichas en el bar, SOLO se puede mover desde el bar
+        if self.has_checkers_on_bar(player_color) and from_point is not None:
+            return False
+        
+        # 3. Reingreso desde la barra
         if from_point is None:
             if not self.has_checkers_on_bar(player_color):
                 return False
@@ -105,7 +109,7 @@ class Board:
             to_point = die_value - 1 if player_color == 'B' else 24 - die_value
             return self._can_land_on(to_point, player_color)
         
-        # 3. Verificar que hay ficha en el origen
+        # 4. Verificar que hay ficha en el origen
         if not (0 <= from_point <= 23):
             return False
         
@@ -113,11 +117,11 @@ class Board:
         if owner != player_color or count == 0:
             return False
         
-        # 4. Calcular destino
-        # Blancas: SUMAN (1→24), Negras: RESTAN (24→1)
+        # 5. Calcular destino
+        # Blancas: SUMAN (1â†’24), Negras: RESTAN (24â†’1)
         to_point = from_point + die_value if player_color == 'B' else from_point - die_value
         
-        # 5. Bearing off
+        # 6. Bearing off
         if (player_color == 'B' and to_point > 23) or (player_color == 'N' and to_point < 0):
             if not self.can_bear_off(player_color):
                 return False
@@ -132,7 +136,7 @@ class Board:
             
             return False
         
-        # 6. Movimiento normal
+        # 7. Movimiento normal
         if not (0 <= to_point <= 23):
             return False
         
