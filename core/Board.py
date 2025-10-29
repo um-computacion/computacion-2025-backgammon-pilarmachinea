@@ -125,16 +125,13 @@ class Board:
         if (player_color == 'B' and to_point > 23) or (player_color == 'N' and to_point < 0):
             if not self.can_bear_off(player_color):
                 return False
-            
+
+            # Distancia exacta hasta off
             distance_to_off = 24 - from_point if player_color == 'B' else from_point + 1
-            
-            if die_value == distance_to_off:
-                return True
-            
-            if die_value > distance_to_off:
-                return self._is_furthest_checker(from_point, player_color)
-            
-            return False
+
+            # SOLO exacto permitido
+            return die_value == distance_to_off
+
         
         # 7. Movimiento normal
         if not (0 <= to_point <= 23):
