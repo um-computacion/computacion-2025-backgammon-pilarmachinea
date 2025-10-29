@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Backgammon con Pygame - Interfaz grÃ¡fica
-Layout estÃ¡ndar de backgammon
+Layout estandar de backgammon
 """
 
 import pygame
@@ -34,8 +34,10 @@ RADIO_FICHA = 25
 TABLERO_X = MARGEN
 TABLERO_Y = MARGEN
 BAR_X = TABLERO_X + 6 * ANCHO_PUNTO + ANCHO_PUNTO // 2
-OFF_X = TABLERO_X + ANCHO_TABLERO + 10  # DERECHA: despuÃ©s del tablero
+OFF_X = TABLERO_X + ANCHO_TABLERO + 10  # DERECHA: despues del tablero
 OFF_WIDTH = ANCHO_PUNTO - 20
+
+
 
 class BackgammonUI:
     def __init__(self, nombre1="Blancas", nombre2="Negras"):
@@ -45,20 +47,20 @@ class BackgammonUI:
         pygame.display.set_caption("Backgammon")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 36)
-        
+        self.info_message = None
+        self.info_time = 0
+        self.info_duration = 2000  # ms que permanece visible (2s)
+        self.pending_end_turn = False  # si True, al expirar el mensaje, se pasa el turno
         self.punto_seleccionado = None
         self.dado_seleccionado = None
 
     def punto_a_coords(self, idx):
         """
-        Mapea Ã­ndice (0-23) a coordenadas visuales.
+        Mapea i­ndice (0-23) a coordenadas visuales.
         Layout personalizado (colores intercambiados):
         
         ARRIBA:   13-18 | BAR | 19-24
         ABAJO:    12-7  | BAR |  6-1
-        
-        BLANCAS: 1â†’24 (suben lado derecho)
-        NEGRAS: 24â†’1 (bajan lado derecho)
         """
         
         # ARRIBA IZQUIERDA: idx 12-17 â†’ puntos 13-18
@@ -91,7 +93,7 @@ class BackgammonUI:
         return x, y
 
     def coords_a_punto(self, x, y):
-        """Mapea coordenadas de click al Ã­ndice de un punto."""
+        """Mapea coordenadas de click al i­ndice de un punto."""
         x_rel = x - TABLERO_X
         y_rel = y - TABLERO_Y
 
@@ -119,23 +121,23 @@ class BackgammonUI:
             else:
                 return None  # Barra
                 
-        # Verificar que el click estÃ© dentro del triÃ¡ngulo
+        # Verificar que el click esta dentro del triangulo
         if (0 <= y_rel <= ALTO_PUNTO or ALTO_TABLERO - ALTO_PUNTO <= y_rel <= ALTO_TABLERO):
             return idx
         return None
     
     def es_area_bar(self, x, y):
-        """Verifica si el click estÃ¡ en el Ã¡rea de la barra."""
+        """Verifica si el click esta en el area de la barra."""
         return BAR_X - ANCHO_PUNTO // 2 <= x <= BAR_X + ANCHO_PUNTO // 2 and \
                TABLERO_Y <= y <= TABLERO_Y + ALTO_TABLERO
 
     def es_area_off(self, x, y):
-        """Verifica si el click estÃ¡ en el Ã¡rea de retirada (Off)."""
+        """Verifica si el click esta en el area de retirada (Off)."""
         return OFF_X <= x <= OFF_X + OFF_WIDTH and \
                TABLERO_Y <= y <= TABLERO_Y + ALTO_TABLERO
 
     def get_dado_at_pos(self, x, y):
-        """Retorna el valor del dado en la posiciÃ³n del click, o None."""
+        """Retorna el valor del dado en la posicion del click, o None."""
         dice = self.game.dice()
         disponibles = self.game.available_dice()
         
@@ -159,14 +161,14 @@ class BackgammonUI:
         return None
 
     def dibujar_tablero(self):
-        """Dibuja el marco y los triÃ¡ngulos del tablero."""
+        """Dibuja el marco y los triangulos del tablero."""
         self.screen.fill(BEIGE)
         
         # Marco del tablero
         pygame.draw.rect(self.screen, MARRON_OSCURO, 
                          (TABLERO_X, TABLERO_Y, ANCHO_TABLERO, ALTO_TABLERO), 5)
 
-        # TriÃ¡ngulos
+        # Triangulos
         for i in range(24):
             coords = self.punto_a_coords(i)
             if coords is None:
@@ -174,12 +176,12 @@ class BackgammonUI:
             x, y = coords
             color_punto = MARRON_CLARO if i % 2 == 0 else MARRON_OSCURO
             
-            # TODOS los triÃ¡ngulos de ARRIBA (12-23) apuntan â†“ HACIA ABAJO
+            # TODOS los triangulos de ARRIBA (12-23) apuntan HACIA ABAJO
             if 12 <= i <= 23:
                 puntos = [(x - ANCHO_PUNTO // 2, y),      # Base izquierda
                           (x + ANCHO_PUNTO // 2, y),      # Base derecha
                           (x, y + ALTO_PUNTO)]            # Punta hacia abajo
-            # TODOS los triÃ¡ngulos de ABAJO (0-11) apuntan â†‘ HACIA ARRIBA
+            # TODOS los triangulos de ABAJO (0-11) apuntan HACIA ARRIBA
             else:
                 puntos = [(x - ANCHO_PUNTO // 2, y),      # Base izquierda
                           (x + ANCHO_PUNTO // 2, y),      # Base derecha
@@ -191,37 +193,76 @@ class BackgammonUI:
         pygame.draw.line(self.screen, MARRON_OSCURO, 
                          (BAR_X, TABLERO_Y), (BAR_X, TABLERO_Y + ALTO_TABLERO), ANCHO_PUNTO)
         
-        # Ãrea de Retirada
+        # area de Retirada
         pygame.draw.rect(self.screen, GRIS, 
                          (OFF_X, TABLERO_Y, OFF_WIDTH, ALTO_TABLERO), 0)
         pygame.draw.rect(self.screen, MARRON_OSCURO, 
                          (OFF_X, TABLERO_Y, OFF_WIDTH, ALTO_TABLERO), 3)
 
     def dibujar_fichas(self):
-        """Dibuja las fichas en el tablero, la barra y el Ã¡rea de retirada."""
-        
-        # Dibujar fichas en los puntos
+        """Dibuja las fichas en el tablero, la barra y el area de retirada."""
+        # Dibujar fichas en los puntos (apoyadas en la base, con +n si hay más de 5)
+        MAX_VISIBLE_STACK = 5   # cuántas se muestran por punto
+        PADDING_BASE = 6        # espacio entre base y la primera ficha
+        GAP_STACK = 2           # (opcional) espacio entre fichas visibles
+
         for i in range(24):
             coords = self.punto_a_coords(i)
             if coords is None:
                 continue
+
             x, y = coords
             stack = self.game.board().points()[i]
-            
-            for j, checker in enumerate(stack):
-                color = BLANCO if checker.color() == 'B' else NEGRO
-                
-                # TriÃ¡ngulos ARRIBA (12-23): apuntan â†“ hacia abajo
-                # Fichas crecen desde punta hacia base
-                if 12 <= i <= 23:
-                    y_centro = y + ALTO_PUNTO - RADIO_FICHA - j * 2 * RADIO_FICHA
-                # TriÃ¡ngulos ABAJO (0-11): apuntan â†‘ hacia arriba
-                # Fichas crecen desde punta hacia base
-                else:
-                    y_centro = y - ALTO_PUNTO + RADIO_FICHA + j * 2 * RADIO_FICHA
-                
-                pygame.draw.circle(self.screen, color, (int(x), int(y_centro)), RADIO_FICHA)
-                pygame.draw.circle(self.screen, MARRON_OSCURO, (int(x), int(y_centro)), RADIO_FICHA, 2)
+            count = len(stack)
+            if count == 0:
+                continue
+
+            # Color (todas las fichas de un punto son del mismo color si count>1)
+            color = BLANCO if stack[0].color() == 'B' else NEGRO
+
+            visible = min(count, MAX_VISIBLE_STACK)
+
+            if 12 <= i <= 23:
+                # TRIANGULOS DE ARRIBA (apuntan hacia abajo) -> base en y (arriba)
+                # Apilar desde la base hacia adentro del triángulo
+                start_y = y + PADDING_BASE + RADIO_FICHA
+                for k in range(visible):
+                    y_centro = start_y + k * (2 * RADIO_FICHA + GAP_STACK)
+                    pygame.draw.circle(self.screen, color, (int(x), int(y_centro)), RADIO_FICHA)
+                    pygame.draw.circle(self.screen, MARRON_OSCURO, (int(x), int(y_centro)), RADIO_FICHA, 2)
+
+                # Indicador +n si hay más de las visibles
+                if count > visible:
+                    font_small = pygame.font.Font(None, 24)
+                    extra = count - visible
+                    text = font_small.render(f"+{extra}", True, color)
+                    # Lo colocamos debajo de la última visible, pegadito
+                    tx = int(x - text.get_width() // 2)
+                    ty = int(start_y + visible * (2 * RADIO_FICHA + GAP_STACK))
+                    # Evitar salirnos del triángulo
+                    ty = min(ty, y + ALTO_PUNTO - text.get_height() - 2)
+                    self.screen.blit(text, (tx, ty))
+
+            else:
+                # TRIÁNGULOS DE ABAJO (apuntan hacia arriba) -> base en y (abajo)
+                # Apilar desde la base hacia adentro del triángulo
+                start_y = y - PADDING_BASE - RADIO_FICHA
+                for k in range(visible):
+                    y_centro = start_y - k * (2 * RADIO_FICHA + GAP_STACK)
+                    pygame.draw.circle(self.screen, color, (int(x), int(y_centro)), RADIO_FICHA)
+                    pygame.draw.circle(self.screen, MARRON_OSCURO, (int(x), int(y_centro)), RADIO_FICHA, 2)
+
+                # Indicador +n si hay más de las visibles
+                if count > visible:
+                    font_small = pygame.font.Font(None, 24)
+                    extra = count - visible
+                    text = font_small.render(f"+{extra}", True, color)
+                    # Lo colocamos arriba de la última visible, pegadito
+                    tx = int(x - text.get_width() // 2)
+                    ty = int(start_y - visible * (2 * RADIO_FICHA + GAP_STACK) - text.get_height())
+                    # Evitar salirnos del triángulo
+                    ty = max(ty, y - ALTO_PUNTO + 2)
+                    self.screen.blit(text, (tx, ty))
 
         # Dibujar fichas en la Barra
         bar = self.game.board().bar()
@@ -239,19 +280,42 @@ class BackgammonUI:
                 pygame.draw.circle(self.screen, NEGRO, (int(x_centro), int(y_centro)), RADIO_FICHA)
                 pygame.draw.circle(self.screen, MARRON_OSCURO, (int(x_centro), int(y_centro)), RADIO_FICHA, 2)
 
-        # Dibujar fichas retiradas
+                # Dibujar fichas retiradas como "tiritas" horizontales apiladas
         off = self.game.board().off()
-        if off['B']:
-            for j in range(min(off['B'], 15)):
-                y_centro = TABLERO_Y + 30 + j * 2 * RADIO_FICHA
-                pygame.draw.circle(self.screen, BLANCO, (int(OFF_X + OFF_WIDTH // 2), int(y_centro)), RADIO_FICHA)
-                pygame.draw.circle(self.screen, MARRON_OSCURO, (int(OFF_X + OFF_WIDTH // 2), int(y_centro)), RADIO_FICHA, 2)
-        
-        if off['N']:
-            for j in range(min(off['N'], 15)):
-                y_centro = TABLERO_Y + ALTO_TABLERO - 30 - j * 2 * RADIO_FICHA
-                pygame.draw.circle(self.screen, NEGRO, (int(OFF_X + OFF_WIDTH // 2), int(y_centro)), RADIO_FICHA)
-                pygame.draw.circle(self.screen, MARRON_OSCURO, (int(OFF_X + OFF_WIDTH // 2), int(y_centro)), RADIO_FICHA, 2)
+
+        SEG_ANCHO = OFF_WIDTH - 10     # ancho de la tirita
+        SEG_ALTO  = 6                  # alto de la tirita
+        SEG_GAP   = 4                  # espacio entre tiritas
+        x_seg = OFF_X + (OFF_WIDTH - SEG_ANCHO) // 2
+
+        # BLANCAS: de arriba hacia abajo
+        if off['B'] > 0:
+            max_draw = min(off['B'], 15)
+            for j in range(max_draw):
+                y_seg = TABLERO_Y + 10 + j * (SEG_ALTO + SEG_GAP)
+                pygame.draw.rect(self.screen, BLANCO, (x_seg, y_seg, SEG_ANCHO, SEG_ALTO))
+                pygame.draw.rect(self.screen, MARRON_OSCURO, (x_seg, y_seg, SEG_ANCHO, SEG_ALTO), 1)
+            # Mostrar +n si hay más de 15
+            if off['B'] > 15:
+                font_num = pygame.font.Font(None, 24)
+                extra = off['B'] - 15
+                text_num = font_num.render(f"+{extra}", True, BLANCO)
+                self.screen.blit(text_num, (x_seg, TABLERO_Y + 10 + max_draw * (SEG_ALTO + SEG_GAP) + 4))
+
+        # NEGRAS: de abajo hacia arriba
+        if off['N'] > 0:
+            max_draw = min(off['N'], 15)
+            for j in range(max_draw):
+                # j=0 dibuja pegado abajo; luego sube
+                y_seg = TABLERO_Y + ALTO_TABLERO - 10 - (j + 1) * (SEG_ALTO + SEG_GAP)
+                pygame.draw.rect(self.screen, NEGRO, (x_seg, y_seg, SEG_ANCHO, SEG_ALTO))
+                pygame.draw.rect(self.screen, MARRON_OSCURO, (x_seg, y_seg, SEG_ANCHO, SEG_ALTO), 1)
+            if off['N'] > 15:
+                font_num = pygame.font.Font(None, 24)
+                extra = off['N'] - 15
+                text_num = font_num.render(f"+{extra}", True, NEGRO)
+                self.screen.blit(text_num, (x_seg, TABLERO_Y + ALTO_TABLERO - 10 - max_draw * (SEG_ALTO + SEG_GAP) - 24))
+
 
     def dibujar_dados(self):
         """Dibuja los dados en fila horizontal debajo del tablero."""
@@ -269,7 +333,7 @@ class BackgammonUI:
                 x = x_base + i * (dado_size + espacio_entre_dados)
                 y = y_base
                 
-                # Color del dado segÃºn estado
+                # Color del dado segun estado
                 if die_val in disponibles:
                     die_color = VERDE
                 else:
@@ -283,7 +347,7 @@ class BackgammonUI:
                 self.screen.blit(text_dado, text_rect)
                 
     def dibujar_info(self):
-        """Muestra informaciÃ³n del turno y el juego."""
+        """Muestra informacion del turno y el juego."""
         color_turno = "BLANCAS" if self.game.turno() == 'B' else "NEGRAS"
         color_rgb = BLANCO if self.game.turno() == 'B' else NEGRO
         
@@ -293,6 +357,12 @@ class BackgammonUI:
         # Instrucciones dinÃ¡micas arriba
         if not self.game.dice():
             text_instruccion = self.font.render("Presiona ESPACIO para tirar dados", True, AZUL)
+        elif self.game.board().has_checkers_on_bar(self.game.turno()):
+            # MENSAJE ESPECIAL: Hay fichas en el bar
+            if self.puede_sacar_del_bar():
+                text_instruccion = self.font.render("¡DEBES SACAR TUS FICHAS DEL BAR PRIMERO!", True, ROJO)
+            else:
+                text_instruccion = self.font.render("BLOQUEADO - Presiona ESPACIO para pasar turno", True, ROJO)
         elif self.punto_seleccionado is None:
             text_instruccion = self.font.render("1. Selecciona una de tus fichas (clic para cambiar)", True, VERDE)
         elif self.dado_seleccionado is None:
@@ -315,14 +385,10 @@ class BackgammonUI:
         # Instrucciones
         font_pequena = pygame.font.Font(None, 28)
         instrucciones = [
-            "CÃ“MO JUGAR:",
+            "COMO JUGAR:",
             "1. Presiona ESPACIO para tirar los dados",
-            "2. Haz CLICK en una de tus fichas (o en el BAR si tienes ahÃ­)",
+            "2. Haz CLICK en una de tus fichas (o en el BAR si tienes ahi­)",
             "3. Haz CLICK en el DADO que quieres usar (la ficha se mueve automaticamente)",
-            "â€¢ Puedes cambiar de ficha haciendo CLICK en otra ficha tuya antes de elegir dado",
-            "â€¢ Dados VERDES = disponibles | GRISES = usados",
-            "â€¢ Blancas: 1â†’24 (suben lado derecho) | Negras: 24â†’1 (bajan lado der.)",
-            "â€¢ OFF a la DERECHA | Todos triÃ¡ngulos ARRIBA â†“ | ABAJO â†‘",
         ]
         
         y_inicial = TABLERO_Y + ALTO_TABLERO + 160
@@ -339,36 +405,70 @@ class BackgammonUI:
         # Mensaje de victoria
         if self.game.is_game_over():
             ganador = "BLANCAS" if self.game.winner() == 'B' else "NEGRAS"
-            text_ganador = self.font.render(f"Â¡JUEGO TERMINADO! GANADOR: {ganador}", True, ROJO)
+            text_ganador = self.font.render(f"¡JUEGO TERMINADO! GANADOR: {ganador}", True, ROJO)
             self.screen.blit(text_ganador, (ANCHO_VENTANA // 2 - text_ganador.get_width() // 2, 10))
+
+    def puede_sacar_del_bar(self):
+        """Verifica si el jugador puede sacar alguna ficha del bar con los dados disponibles."""
+        if not self.game.board().has_checkers_on_bar(self.game.turno()):
+            return True  # No hay fichas en el bar, no aplica
+        
+        dados_disponibles = self.game.available_dice()
+        if not dados_disponibles:
+            return False
+        
+        # Verificar si algún dado permite sacar del bar
+        for dado in dados_disponibles:
+            if self.game.can_move(None, dado):  # None = desde el bar
+                return True
+        
+        return False
 
     def manejar_espacio(self):
         """Maneja la tecla ESPACIO para tirar dados o terminar turno."""
         try:
             if self.game.is_game_over():
                 return
-                
+
             if not self.game.dice():
                 self.game.roll()
                 self.punto_seleccionado = None
                 self.dado_seleccionado = None
-            elif not self.game.available_dice() or not self.game.has_valid_moves():
-                if self.game.can_end_turn():
-                    self.game.end_turn()
-                    self.punto_seleccionado = None
-                    self.dado_seleccionado = None
+            else:
+                dados_disponibles = self.game.available_dice()
+
+                # Caso especial: hay fichas en el bar
+                if self.game.board().has_checkers_on_bar(self.game.turno()):
+                    if not self.puede_sacar_del_bar():
+                        # Antes pasabas el turno directo: ahora mostramos aviso y lo pasamos tras 2s
+                        self.info_message = "Sin movimientos válidos desde la barra. Se pasa el turno…"
+                        self.info_time = pygame.time.get_ticks()
+                        self.pending_end_turn = True
+                        # limpiar selecciones
+                        self.punto_seleccionado = None
+                        self.dado_seleccionado = None
+                        return
+
+                # Caso normal: sin dados disponibles o sin movimientos válidos
+                if not dados_disponibles or not self.game.has_valid_moves():
+                    if self.game.can_end_turn():
+                        # Antes: self.game.end_turn()
+                        self.info_message = "Sin movimientos válidos. Se pasa el turno…"
+                        self.info_time = pygame.time.get_ticks()
+                        self.pending_end_turn = True
+                        self.punto_seleccionado = None
+                        self.dado_seleccionado = None
+
         except Exception as e:
             print(f"Error en manejar_espacio: {e}")
             import traceback
             traceback.print_exc()
-            # Resetear estado en caso de error
             self.punto_seleccionado = None
             self.dado_seleccionado = None
-            raise  # Re-lanzar para que lo capture el bucle principal
+            raise
 
     def manejar_click(self, x, y):
         """Maneja todos los clicks del mouse."""
-        
         try:
             if self.game.is_game_over():
                 return
@@ -385,6 +485,11 @@ class BackgammonUI:
                         if self.game.board().has_checkers_on_bar(self.game.turno()):
                             self.punto_seleccionado = "bar"
                             self.dado_seleccionado = None
+                    return
+                
+                # REGLA: Si hay fichas en el bar, SOLO se puede seleccionar del bar
+                if self.game.board().has_checkers_on_bar(self.game.turno()):
+                    # No permitir seleccionar fichas del tablero
                     return
                 
                 if punto_idx in range(24):
@@ -427,7 +532,12 @@ class BackgammonUI:
                     return
                 
                 # Click en otro punto: cambiar selección si es del jugador actual
+                # REGLA: Si hay fichas en el bar, NO se puede cambiar a fichas del tablero
                 if punto_idx in range(24):
+                    if self.game.board().has_checkers_on_bar(self.game.turno()):
+                        # No permitir cambiar a fichas del tablero si hay fichas en el bar
+                        return
+                    
                     owner, count = self.game.board().point_owner_count(punto_idx)
                     if owner == self.game.turno() and count > 0:
                         self.punto_seleccionado = punto_idx
@@ -473,7 +583,15 @@ class BackgammonUI:
                 self.dibujar_dados()
                 self.dibujar_info()
                 
-                # Resaltar la selecciÃ³n
+                # Resaltar área del bar si hay fichas bloqueadas
+                if self.game.dice() and self.game.board().has_checkers_on_bar(self.game.turno()):
+                    if not self.puede_sacar_del_bar():
+                        # Resaltar en ROJO para indicar bloqueo
+                        pygame.draw.rect(self.screen, ROJO, 
+                                       (BAR_X - ANCHO_PUNTO // 4, TABLERO_Y,
+                                        ANCHO_PUNTO // 2, ALTO_TABLERO), 5)
+                
+                # Resaltar la seleccion
                 if self.punto_seleccionado == "bar":
                     pygame.draw.rect(self.screen, VERDE, 
                                    (BAR_X - ANCHO_PUNTO // 4, TABLERO_Y,
@@ -484,10 +602,10 @@ class BackgammonUI:
                     if coords:
                         x, y = coords
                         
-                        # ARRIBA (12-23): fichas estÃ¡n en punta hacia abajo
+                        # ARRIBA (12-23): fichas estan en punta hacia abajo
                         if 12 <= self.punto_seleccionado <= 23:
                             y_center = y + ALTO_PUNTO - RADIO_FICHA
-                        # ABAJO (0-11): fichas estÃ¡n en punta hacia arriba
+                        # ABAJO (0-11): fichas estan en punta hacia arriba
                         else:
                             y_center = y - ALTO_PUNTO + RADIO_FICHA
                             
@@ -512,7 +630,29 @@ class BackgammonUI:
                         self.screen.blit(error_surf, (20, ALTO_VENTANA // 2 - 75))
                     else:
                         error_message = None
-                
+                # Cartel informativo (amarillo) y auto "end turn" si corresponde
+                if self.info_message:
+                    current_time = pygame.time.get_ticks()
+                    # Render del cartel
+                    info_surf = pygame.Surface((ANCHO_VENTANA - 40, 120))
+                    info_surf.fill(AMARILLO)
+                    pygame.draw.rect(info_surf, NEGRO, (0, 0, info_surf.get_width(), info_surf.get_height()), 3)
+                    font_info_title = pygame.font.Font(None, 32)
+                    font_info_text  = pygame.font.Font(None, 26)
+
+                    t1 = font_info_title.render("Aviso", True, NEGRO)
+                    t2 = font_info_text.render(self.info_message, True, NEGRO)
+                    info_surf.blit(t1, (12, 10))
+                    info_surf.blit(t2, (12, 55))
+                    self.screen.blit(info_surf, (20, ALTO_VENTANA // 2 - 60))
+
+                    # Al expirar el tiempo, ejecutamos acción pendiente (si la hay)
+                    if current_time - self.info_time >= self.info_duration:
+                        self.info_message = None
+                        if self.pending_end_turn and self.game.can_end_turn():
+                            self.game.end_turn()
+                        self.pending_end_turn = False
+
                 pygame.display.flip()
                 self.clock.tick(60)
                 
@@ -531,12 +671,10 @@ class BackgammonUI:
         pygame.quit()
         sys.exit()
 
-
 def main():
     print("\n=== BACKGAMMON ===\n")
     nombre1 = input("Nombre jugador BLANCAS (Enter = 'Blancas'): ").strip() or "Blancas"
     nombre2 = input("Nombre jugador NEGRAS (Enter = 'Negras'): ").strip() or "Negras"
-    
     ui = BackgammonUI(nombre1, nombre2)
     ui.run()
 
