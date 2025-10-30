@@ -1,13 +1,4 @@
-************* Module computacion-2025-backgammon-pilarmachinea.core.BackgammonGame
-core/BackgammonGame.py:120:15: E1101: Instance of 'Board' has no 'get_valid_moves' member (no-member)
-************* Module computacion-2025-backgammon-pilarmachinea.core.Board
-core/Board.py:68:0: C0325: Unnecessary parens after 'not' keyword (superfluous-parens)
-core/Board.py:95:0: C0325: Unnecessary parens after 'not' keyword (superfluous-parens)
-core/Board.py:113:0: C0325: Unnecessary parens after 'not' keyword (superfluous-parens)
-core/Board.py:137:0: C0325: Unnecessary parens after 'not' keyword (superfluous-parens)
-************* Module computacion-2025-backgammon-pilarmachinea.core.Checker
-core/Checker.py:1:0: R0903: Too few public methods (1/2) (too-few-public-methods)
 
-------------------------------------------------------------------
-Your code has been rated at 9.74/10 (previous run: 7.16/10, +2.58)
+------------------------------------
+Your code has been rated at 10.00/10
 
