@@ -6,4 +6,4 @@ tests/__pycache__/
 core/__pycache__/
 .cpython/
 venv/
-
+.pytest_cache/

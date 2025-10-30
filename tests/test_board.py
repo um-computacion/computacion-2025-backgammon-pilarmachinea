@@ -13,7 +13,6 @@ class TestBoard(unittest.TestCase):
         self.assertEqual((owner11, count11), ('B', 5))
         self.assertEqual((owner16, count16), ('B', 3))
         self.assertEqual((owner18, count18), ('B', 5))
-
         owner23, count23 = b.point_owner_count(23)  # punto 24
         owner12, count12 = b.point_owner_count(12)  # punto 13
         owner7,  count7  = b.point_owner_count(7)   # punto 8
@@ -30,14 +29,11 @@ class TestBoard(unittest.TestCase):
         b.points()[23].append(Checker('N'))     # una negra sola en 24 (idx 23)
         b.points()[17].clear()
         b.points()[17].append(Checker('B'))     # blanca en 18 (idx 17) → con 6 cae en 23
-
         self.assertTrue(b.can_move(17, 6, 'B'))
         self.assertTrue(b.move(17, 6, 'B'))
         self.assertTrue(b.has_checkers_on_bar('N'))
-
         # Con fichas en bar, N NO puede mover desde puntos normales
         self.assertFalse(b.can_move(12, 3, 'N'))
-
         # Reingreso desde el bar: die=6 para caer en idx 18 (punto 19)
         b.points()[18].clear()
         self.assertTrue(b.can_move(None, 6, 'N'))
@@ -50,13 +46,11 @@ class TestBoard(unittest.TestCase):
         destino_bloqueado = 8
         b.points()[destino_bloqueado].clear()
         b.points()[destino_bloqueado].extend([Checker('N'), Checker('N')])
-
         origen_b = 6
         b.points()[origen_b].clear()
         b.points()[origen_b].append(Checker('B'))
         die = destino_bloqueado - origen_b
         self.assertFalse(b.can_move(origen_b, die, 'B'))
-
         # Captura (1 enemiga)
         destino_capturable = 9
         b.points()[destino_capturable].clear()
@@ -74,12 +68,10 @@ class TestBoard(unittest.TestCase):
         b.points()[18].extend([Checker('B'), Checker('B')])  # punto 19
         b.points()[23].append(Checker('B'))                  # punto 24
         self.assertTrue(b.can_bear_off('B'))
-
         # idx 23 → distancia 1
         self.assertTrue(b.can_move(23, 1, 'B'))
         self.assertTrue(b.move(23, 1, 'B'))
         self.assertEqual(b.off()['B'], 1)
-
         # idx 18 → distancia 6 exacta
         self.assertTrue(b.can_move(18, 6, 'B'))
         self.assertTrue(b.can_move(18, 5, 'B'))
@@ -113,11 +105,9 @@ class TestBoardExtra(unittest.TestCase):
         self.assertTrue(self.b.move(11, 6, 'N'))
         # Verificamos que B quedó en el bar
         self.assertTrue(self.b.has_checkers_on_bar('B'))
-
         # 2) Bloqueamos las 6 entradas de B (idx 18..23) con dos negras cada una
         for idx in range(18, 24):
             self.b.points()[idx].extend([Checker('N'), Checker('N')])
-
         # 3) Con cualquier dado 1..6, B NO puede reingresar desde el bar
         for die in range(1, 7):
             self.assertTrue(self.b.can_move(None, die, 'B'))
@@ -130,12 +120,10 @@ class TestBoardExtra(unittest.TestCase):
         self.b.points()[0].append(Checker('N'))
         self.b.points()[5].extend([Checker('N'), Checker('N')])
         self.assertTrue(self.b.can_bear_off('N'))
-
         # Dado exacto 1 desde idx 0 → sale
         self.assertTrue(self.b.can_move(0, 1, 'N'))
         self.assertTrue(self.b.move(0, 1, 'N'))
         self.assertEqual(self.b.off()['N'], 1)
-
         # Desde idx 5 la distancia a off es 6: solo 6 es off
         self.assertTrue(self.b.can_move(5, 6, 'N'))
         # Con un 5 menor debería ser movimiento interno dentro de casa (no off)
@@ -165,12 +153,10 @@ class TestBoardCoverMore(unittest.TestCase):
         self.assertTrue(self.b.can_move(11, 6, 'N'))
         self.assertTrue(self.b.move(11, 6, 'N'))
         self.assertTrue(self.b.has_checkers_on_bar('B'))
-
         # Bloqueamos entradas 0..5 (todas) con 2 N
         for idx in range(6):
             self.b.points()[idx].clear()
             self.b.points()[idx].extend([Checker('N'), Checker('N')])
-
         for die in range(1, 7):
             self.assertFalse(self.b.can_move(None, die, 'B'))
 
@@ -222,8 +208,6 @@ class TestBoardCoverMore(unittest.TestCase):
         for _ in range(14):
             self.b.points()[0].append(Checker('N'))
         self.assertFalse(self.b.can_bear_off('N'))
-
-
 
 if __name__ == "__main__":
     unittest.main()

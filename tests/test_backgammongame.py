@@ -30,11 +30,9 @@ class TestGame(unittest.TestCase):
             b.points()[i].clear()
         # Dos blancas en idx 0 → mover con 1 y 2
         b.points()[0].extend([Checker('B'), Checker('B')])
-
         with patch("core.Dice.random.randint", side_effect=[1, 2]):
             g.roll()
         self.assertEqual(set(g.available_dice()), {1, 2})
-
         # Mueve con 1
         self.assertTrue(g.can_move(0, 1))
         turno_ini = g.turno()
@@ -56,10 +54,8 @@ class TestGame(unittest.TestCase):
             b.points()[idx].extend([Checker('N'), Checker('N')])
         # Una blanca en idx 23
         b.points()[23].append(Checker('B'))
-
         with patch("core.Dice.random.randint", side_effect=[1, 2]):
             g.roll()
-
         # Dependiendo de la lógica interna, puede o no haber movimientos.
         # Probamos la rama en la que no hay y se puede terminar turno.
         if not g.has_valid_moves():
@@ -72,10 +68,8 @@ class TestGame(unittest.TestCase):
             b.points()[i].clear()
         # Una blanca en idx 18 (punto 19) → distancia a off 6
         b.points()[18].append(Checker('B'))
-
         with patch("core.Dice.random.randint", side_effect=[6, 5]):
             g.roll()
-
         # Exacto permitido
         self.assertTrue(g.can_move(18, 6))
         # Con 5 debería ser movimiento interno (no off). Si el destino es válido, can_move True.
@@ -87,7 +81,6 @@ class TestGame(unittest.TestCase):
         b.off()['B'] = 15
         self.assertTrue(g.is_game_over())
         self.assertEqual(g.winner(), "B")
-
 
 class TestGameExtra(unittest.TestCase):
     def setUp(self):
@@ -104,20 +97,17 @@ class TestGameExtra(unittest.TestCase):
             vals = self.g.roll()
         self.assertEqual(vals, [3, 3, 3, 3])
         self.assertEqual(self.g.available_dice(), [3, 3, 3, 3])
-
         # Simplificamos el tablero para que las blancas (B) puedan mover 4 veces
         self._vaciar_tablero()
         # 4 fichas blancas en idx 0 → podrán hacer 4 avances de 3
         for _ in range(4):
             self.b.points()[0].append(Checker('B'))
-
         # Vamos consumiendo cada "3"
         for k in range(4):
             self.assertTrue(self.g.can_move(0, 3), f"Falla en el avance {k+1}")
             self.assertTrue(self.g.move(0, 3))
             # Se va reduciendo la lista de dados disponibles
             self.assertEqual(len(self.g.available_dice()), 3 - k)
-
         # Sin dados → cambia el turno automáticamente
         self.assertEqual(len(self.g.available_dice()), 0)
 
@@ -149,7 +139,6 @@ class TestGameExtra(unittest.TestCase):
             # intenta algún movimiento trivial inválido para consumir/forzar fin
             if not self.g.move(2, 3):
                 break
-
         # Ahora turno pasa a N y N tiene ficha en bar
         # N NO debería poder mover desde puntos normales hasta reingresar
         with patch("core.Dice.random.randint", side_effect=[1, 2]):
@@ -200,7 +189,6 @@ class TestGameCoverMore(unittest.TestCase):
         self.assertTrue(self.g.can_move(0, 2))
         self.assertTrue(self.g.move(0, 2))
         self.assertEqual(self.g.available_dice(), [5])
-
         # Nueva tirada debe SOBREESCRIBIR
         with patch("core.Dice.random.randint", side_effect=[4, 4]):
             vals = self.g.roll()
@@ -228,8 +216,6 @@ class TestGameCoverMore(unittest.TestCase):
             self.g.roll()
         self.assertFalse(self.g.has_valid_moves())
         self.assertTrue(self.g.can_end_turn())
-
-
 
 if __name__ == "__main__":
     unittest.main()
