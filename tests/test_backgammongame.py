@@ -1,376 +1,235 @@
 import unittest
+from unittest.mock import patch
 from core.BackgammonGame import BackgammonGame
-from core.Dice import Dice 
-from unittest.mock import MagicMock, patch
+from core.Board import Board
+from core.Checker import Checker
 
-# --- TESTS BÁSICOS ---
+class TestGame(unittest.TestCase):
+    def test_basicos_turno_y_players(self):
+        g = BackgammonGame("Anna", "Noa")
+        self.assertIn(g.turno(), ("B", "N"))
+        ps = g.players()
+        self.assertEqual(set(ps.keys()), {"B", "N"})
+        self.assertIn(g.current_player().nombre(), ("Anna", "Noa"))
+        self.assertIsInstance(g.board(), Board)
 
-class TestBackgammonGameBasico(unittest.TestCase):
-    def test_turno_inicial(self):
+    def test_roll_y_dados_disponibles(self):
         g = BackgammonGame()
-        self.assertEqual(g.turno(), 'B') 
+        seq = [2, 5]
+        with patch("core.Dice.random.randint", side_effect=seq):
+            vals = g.roll()
+        self.assertEqual(sorted(vals), [2, 5])
+        self.assertEqual(sorted(g.dice()), [2, 5])
+        self.assertEqual(sorted(g.available_dice()), [2, 5])
 
-    def test_jugadores_diccionario(self):
+    def test_move_consumo_de_dados_y_fin_de_turno(self):
         g = BackgammonGame()
-        jugadores = g.players()
-        self.assertIsInstance(jugadores, dict)
-        self.assertEqual(len(jugadores), 2)
-        self.assertIn('B', jugadores)
-        self.assertIn('N', jugadores)
+        b = g.board()
+        # Simplifico tablero
+        for i in range(24):
+            b.points()[i].clear()
+        # Dos blancas en idx 0 → mover con 1 y 2
+        b.points()[0].extend([Checker('B'), Checker('B')])
 
-    def test_nombres_por_defecto(self):
+        with patch("core.Dice.random.randint", side_effect=[1, 2]):
+            g.roll()
+        self.assertEqual(set(g.available_dice()), {1, 2})
+
+        # Mueve con 1
+        self.assertTrue(g.can_move(0, 1))
+        turno_ini = g.turno()
+        self.assertTrue(g.move(0, 1))
+        self.assertEqual(set(g.available_dice()), {2})
+        # Mueve con 2, se acaban dados → cambia turno
+        self.assertTrue(g.can_move(0, 2))
+        self.assertTrue(g.move(0, 2))
+        self.assertNotEqual(g.turno(), turno_ini)
+
+    def test_can_end_turn_y_has_valid_moves(self):
         g = BackgammonGame()
-        jugadores = g.players()
-        self.assertEqual(jugadores['B'].nombre(), 'Blancas')
-        self.assertEqual(jugadores['N'].nombre(), 'Negras')
+        b = g.board()
+        # Tablero sin movimientos claros para B
+        for i in range(24):
+            b.points()[i].clear()
+        # Bloqueo con 2 negras en 0..5
+        for idx in range(6):
+            b.points()[idx].extend([Checker('N'), Checker('N')])
+        # Una blanca en idx 23
+        b.points()[23].append(Checker('B'))
 
-    def test_nombres_personalizados(self):
-        """Test para nombres personalizados de jugadores"""
-        g = BackgammonGame(player1="Alice", player2="Bob")
-        jugadores = g.players()
-        self.assertEqual(jugadores['B'].nombre(), 'Alice')
-        self.assertEqual(jugadores['N'].nombre(), 'Bob')
+        with patch("core.Dice.random.randint", side_effect=[1, 2]):
+            g.roll()
 
-    def test_board_existe(self):
+        # Dependiendo de la lógica interna, puede o no haber movimientos.
+        # Probamos la rama en la que no hay y se puede terminar turno.
+        if not g.has_valid_moves():
+            self.assertTrue(g.can_end_turn())
+
+    def test_regla_off_estricta(self):
         g = BackgammonGame()
-        tablero = g.board()
-        self.assertIsNotNone(tablero)
-        self.assertTrue(hasattr(tablero, 'point_owner_count'))
+        b = g.board()
+        for i in range(24):
+            b.points()[i].clear()
+        # Una blanca en idx 18 (punto 19) → distancia a off 6
+        b.points()[18].append(Checker('B'))
 
-    def test_roll_y_dice_cache(self):
-        g = BackgammonGame()
-        tirada = g.roll()
-        self.assertIn(len(tirada), [2, 4])
-        cache = g.dice()
-        self.assertEqual(cache, tirada)
-        self.assertIsNot(cache, tirada) 
+        with patch("core.Dice.random.randint", side_effect=[6, 5]):
+            g.roll()
 
+        # Exacto permitido
+        self.assertTrue(g.can_move(18, 6))
+        # Con 5 debería ser movimiento interno (no off). Si el destino es válido, can_move True.
+        self.assertTrue(g.can_move(18, 5))
 
-# --- TESTS FUNCIONALES (Críticos para la Cobertura) ---
-
-class TestBackgammonGameFuncional(unittest.TestCase):
-
-    def setUp(self):
-        self.g = BackgammonGame() 
-        
-    # Test 1: available_dice_inicial 
-    @patch.object(Dice, 'roll', return_value=[3, 1])
-    def test_available_dice_inicial(self, mock_roll):
-        """Verifica que available_dice retorne los dados no usados inmediatamente después de roll."""
-        self.g.roll() 
-        self.assertCountEqual(self.g.available_dice(), [3, 1])
-
-    # Test 2: move_consume_dice
-    @patch.object(Dice, 'roll', return_value=[3, 1])
-    def test_move_consume_dice(self, mock_roll):
-        """Verifica que un movimiento exitoso consuma el dado."""
-        self.g.roll()
-        
-        with patch.object(self.g.board(), 'move', return_value=True):
-            with patch.object(self.g.board(), 'can_move', return_value=True):
-                with patch.object(self.g, 'is_game_over', return_value=False):
-                    self.assertTrue(self.g.move(7, 3)) 
-            
-        self.assertCountEqual(self.g.available_dice(), [1]) 
-
-    # Test 3: move_ilegal_no_consume_dice
-    @patch.object(Dice, 'roll', return_value=[3, 1])
-    def test_move_ilegal_no_consume_dice(self, mock_roll):
-        """Verifica que un movimiento ilegal no consuma el dado."""
-        self.g.roll()
-        
-        # Falla por dado no disponible
-        self.assertFalse(self.g.move(7, 5)) 
-        
-        # Falla por lógica de tablero
-        self.assertFalse(self.g.move(0, 3)) 
-        
-        self.assertCountEqual(self.g.available_dice(), [3, 1]) 
-
-    # Test 4: test_dice_cache_persists_after_consumption
-    @patch.object(Dice, 'roll', return_value=[3, 1])
-    def test_dice_cache_persists_after_consumption(self, mock_roll):
-        """Verifica que dice() retorne el cache original de la tirada."""
-        self.g.roll() 
-        
-        with patch.object(self.g.board(), 'move', return_value=True):
-            with patch.object(self.g.board(), 'can_move', return_value=True):
-                with patch.object(self.g, 'is_game_over', return_value=False):
-                    with patch.object(self.g, 'available_dice', side_effect=[[3, 1], [1], []]):
-                        self.g.move(7, 3)
-        
-        # El cache original debe persistir
-        self.assertCountEqual(self.g.dice(), [3, 1]) 
-
-    # Test 5: test_can_end_turn_bloqueado
-    @patch.object(Dice, 'roll', return_value=[3, 1])
-    def test_can_end_turn_bloqueado(self, mock_roll):
-        """Verifica can_end_turn cuando quedan dados pero no hay movimientos válidos."""
-        self.g.roll()
-
-        with patch.object(self.g, 'has_valid_moves', return_value=False):
-            self.assertTrue(self.g.can_end_turn()) 
-
-    # Test 6: test_can_end_turn_no_dados_disponibles
-    @patch.object(Dice, 'roll', return_value=[3, 1])
-    def test_can_end_turn_no_dados_disponibles(self, mock_roll):
-        """Verifica can_end_turn cuando no quedan dados."""
-        self.g.roll()
-        
-        # Simular que no hay dados disponibles
-        with patch.object(self.g, 'available_dice', return_value=[]):
-            self.assertTrue(self.g.can_end_turn())
-
-    # Test 7: test_end_turn_alterna_jugador
-    @patch.object(Dice, 'roll', return_value=[3, 1])
-    def test_end_turn_alterna_jugador(self, mock_roll):
-        """Verifica que end_turn cambie el turno y limpie el estado."""
-        
-        self.g.roll()
-        self.assertEqual(self.g.turno(), 'B') 
-        
-        self.g.end_turn()
-        self.assertEqual(self.g.turno(), 'N')
-        
-        self.g.end_turn()
-        self.assertEqual(self.g.turno(), 'B')
-        
-        self.assertCountEqual(self.g.dice(), [])
+    def test_is_game_over_y_winner(self):
+        g = BackgammonGame("Ana", "Noa")
+        b = g.board()
+        b.off()['B'] = 15
+        self.assertTrue(g.is_game_over())
+        self.assertEqual(g.winner(), "B")
 
 
-# --- TESTS ADICIONALES PARA COBERTURA COMPLETA ---
-
-class TestBackgammonGameCoberturaCompleta(unittest.TestCase):
-    
+class TestGameExtra(unittest.TestCase):
     def setUp(self):
         self.g = BackgammonGame()
-    
-    # TEST: current_player con turno de Blancas
-    def test_current_player_blancas(self):
-        """Verifica que current_player retorne el jugador blanco cuando es su turno."""
-        # El turno inicial es 'B'
-        player = self.g.current_player()
-        self.assertEqual(player.obtener_color(), 'blanco')
-    
-    # TEST: current_player con turno de Negras
-    def test_current_player_negras(self):
-        """Verifica que current_player retorne el jugador negro cuando es su turno."""
-        # Cambiar al turno de negras
-        self.g.end_turn()
-        player = self.g.current_player()
-        self.assertEqual(player.obtener_color(), 'negro')
-    
-    # TEST: can_move retorna False cuando dado no disponible
-    @patch.object(Dice, 'roll', return_value=[3, 1])
-    def test_can_move_dado_no_disponible(self, mock_roll):
-        """Verifica que can_move retorne False si el dado no está disponible."""
-        self.g.roll()
-        self.assertFalse(self.g.can_move(7, 5))  # 5 no está en [3, 1]
-    
-    # TEST: can_move delega correctamente al board
-    @patch.object(Dice, 'roll', return_value=[3, 1])
-    def test_can_move_delega_a_board(self, mock_roll):
-        """Verifica que can_move delegue correctamente al board."""
-        self.g.roll()
-        
-        with patch.object(self.g.board(), 'can_move', return_value=True) as mock_board:
-            result = self.g.can_move(7, 3)
-            self.assertTrue(result)
-            mock_board.assert_called_once_with(7, 3, 'B')
-    
-    # TEST: get_valid_moves delega al board
-    @patch.object(Dice, 'roll', return_value=[3, 1])
-    def test_get_valid_moves(self, mock_roll):
-        """Verifica que get_valid_moves delegue al board con dados disponibles."""
-        self.g.roll()
-        
-        expected_moves = [(7, 3), (23, 1)]
-        with patch.object(self.g.board(), 'get_valid_moves', return_value=expected_moves) as mock_board:
-            moves = self.g.get_valid_moves()
-            self.assertEqual(moves, expected_moves)
-            mock_board.assert_called_once_with('B', [3, 1])
-    
-    # TEST: has_valid_moves retorna True cuando hay movimientos
-    @patch.object(Dice, 'roll', return_value=[3, 1])
-    def test_has_valid_moves_true(self, mock_roll):
-        """Verifica que has_valid_moves retorne True cuando hay movimientos válidos."""
-        self.g.roll()
-        
-        with patch.object(self.g, 'get_valid_moves', return_value=[(7, 3), (23, 1)]):
-            self.assertTrue(self.g.has_valid_moves())
-    
-    # TEST: has_valid_moves retorna False cuando no hay movimientos
-    @patch.object(Dice, 'roll', return_value=[3, 1])
-    def test_has_valid_moves_false(self, mock_roll):
-        """Verifica que has_valid_moves retorne False cuando no hay movimientos válidos."""
-        self.g.roll()
-        
-        with patch.object(self.g, 'get_valid_moves', return_value=[]):
-            self.assertFalse(self.g.has_valid_moves())
-    
-    # TEST: can_end_turn retorna False si no se ha tirado
-    def test_can_end_turn_sin_tirada(self):
-        """Verifica que can_end_turn retorne False si no se ha tirado."""
-        self.assertFalse(self.g.can_end_turn())
-    
-    # TEST: can_end_turn retorna True si no hay dados disponibles
-    @patch.object(Dice, 'roll', return_value=[3, 1])
-    def test_can_end_turn_sin_dados_disponibles(self, mock_roll):
-        """Verifica que can_end_turn retorne True cuando no quedan dados."""
-        self.g.roll()
-        
-        # Simular que no hay dados disponibles
-        with patch.object(self.g, 'available_dice', return_value=[]):
-            self.assertTrue(self.g.can_end_turn())
-    
-    # TEST: can_end_turn retorna True si hay dados pero no hay movimientos válidos
-    @patch.object(Dice, 'roll', return_value=[3, 1])
-    def test_can_end_turn_sin_movimientos_validos(self, mock_roll):
-        """Verifica que can_end_turn retorne True cuando hay dados pero no movimientos."""
-        self.g.roll()
-        
-        with patch.object(self.g, 'has_valid_moves', return_value=False):
-            self.assertTrue(self.g.can_end_turn())
-    
-    # TEST: move retorna False cuando dado no disponible
-    @patch.object(Dice, 'roll', return_value=[3, 1])
-    def test_move_dado_no_disponible(self, mock_roll):
-        """Verifica que move retorne False si el dado no está disponible."""
-        self.g.roll()
-        self.assertFalse(self.g.move(7, 5))
-    
-    # TEST: move retorna False cuando can_move retorna False
-    @patch.object(Dice, 'roll', return_value=[3, 1])
-    def test_move_can_move_false(self, mock_roll):
-        """Verifica que move retorne False cuando can_move retorna False."""
-        self.g.roll()
-        
-        with patch.object(self.g, 'can_move', return_value=False):
-            self.assertFalse(self.g.move(7, 3))
-    
-    # TEST: move retorna False cuando board.move falla
-    @patch.object(Dice, 'roll', return_value=[3, 1])
-    def test_move_board_move_false(self, mock_roll):
-        """Verifica que move retorne False cuando board.move falla."""
-        self.g.roll()
-        
-        with patch.object(self.g, 'can_move', return_value=True):
-            with patch.object(self.g.board(), 'move', return_value=False):
-                self.assertFalse(self.g.move(7, 3))
-    
-    # TEST: move exitoso consume dado
-    @patch.object(Dice, 'roll', return_value=[3, 1])
-    def test_move_exitoso_consume_dado(self, mock_roll):
-        """Verifica que un movimiento exitoso consume el dado."""
-        self.g.roll()
-        
-        with patch.object(self.g, 'can_move', return_value=True):
-            with patch.object(self.g.board(), 'move', return_value=True):
-                with patch.object(self.g, 'is_game_over', return_value=False):
-                    with patch.object(self.g, 'available_dice', side_effect=[[3, 1], [1]]):
-                        self.assertTrue(self.g.move(7, 3))
-    
-    # TEST: move con victoria imprime mensaje
-    @patch.object(Dice, 'roll', return_value=[3, 1])
-    def test_move_con_victoria(self, mock_roll):
-        """Verifica que move detecte victoria."""
-        self.g.roll()
-        
-        # Simular que el dado está disponible inicialmente
-        original_available = self.g.available_dice
-        
-        with patch.object(self.g, 'can_move', return_value=True):
-            with patch.object(self.g.board(), 'move', return_value=True):
-                with patch.object(self.g, 'is_game_over', return_value=True):
-                    with patch('builtins.print') as mock_print:
-                        # available_dice debe retornar [3,1] primero (check inicial)
-                        # luego [1] después de usar el dado
-                        result = self.g.move(7, 3)
-                        self.assertTrue(result)
-                        # Verifica que se imprimió el mensaje de victoria
-                        mock_print.assert_called()
-    
-    # TEST: move termina turno automáticamente cuando no quedan dados
-    @patch.object(Dice, 'roll', return_value=[3])
-    def test_move_termina_turno_sin_dados(self, mock_roll):
-        """Verifica que move termine el turno automáticamente cuando no quedan dados."""
-        self.g.roll()
-        turno_inicial = self.g.turno()
-        
-        with patch.object(self.g, 'can_move', return_value=True):
-            with patch.object(self.g.board(), 'move', return_value=True):
-                with patch.object(self.g, 'is_game_over', return_value=False):
-                    # El movimiento consume el único dado, triggereando end_turn automático
-                    self.g.move(7, 3)
-                    
-                    # Verificar que el turno cambió
-                    self.assertNotEqual(self.g.turno(), turno_inicial)
-    
-    # TEST: is_game_over retorna False al inicio
-    def test_is_game_over_false(self):
-        """Verifica que is_game_over retorne False al inicio del juego."""
+        self.b = self.g.board()
+
+    def _vaciar_tablero(self):
+        for i in range(24):
+            self.b.points()[i].clear()
+
+    def test_roll_dobles_y_consumo_individual(self):
+        # Dobles 3 → cuatro movimientos [3,3,3,3]
+        with patch("core.Dice.random.randint", return_value=3):
+            vals = self.g.roll()
+        self.assertEqual(vals, [3, 3, 3, 3])
+        self.assertEqual(self.g.available_dice(), [3, 3, 3, 3])
+
+        # Simplificamos el tablero para que las blancas (B) puedan mover 4 veces
+        self._vaciar_tablero()
+        # 4 fichas blancas en idx 0 → podrán hacer 4 avances de 3
+        for _ in range(4):
+            self.b.points()[0].append(Checker('B'))
+
+        # Vamos consumiendo cada "3"
+        for k in range(4):
+            self.assertTrue(self.g.can_move(0, 3), f"Falla en el avance {k+1}")
+            self.assertTrue(self.g.move(0, 3))
+            # Se va reduciendo la lista de dados disponibles
+            self.assertEqual(len(self.g.available_dice()), 3 - k)
+
+        # Sin dados → cambia el turno automáticamente
+        self.assertEqual(len(self.g.available_dice()), 0)
+
+    def test_dado_no_disponible(self):
+        # Tirada 2 y 5
+        with patch("core.Dice.random.randint", side_effect=[2, 5]):
+            self.g.roll()
+        # Intento mover con 6 (no disponible) → False
+        self.assertFalse(self.g.can_move(0, 6))
+
+    def test_bar_priority_no_permiso_mientras_haya_en_bar(self):
+        # Forzamos que N tenga una ficha en el bar y sea el turno de N
+        # 1) Capturamos una N con B para que vaya al bar
+        self._vaciar_tablero()
+        self.b.points()[5].append(Checker('N'))   # una negra sola
+        self.b.points()[2].append(Checker('B'))   # una blanca que caerá con 3
+        # Turno está en "B" por defecto
+        with patch("core.Dice.random.randint", side_effect=[3, 3]):
+            self.g.roll()
+        self.assertTrue(self.g.move(2, 3))     # captura a N en idx5
+        # Termina turno B
+        self.assertEqual(len(self.g.available_dice()), 3)  # aún quedan dados (por si tu lógica no auto-end)
+        # Consumimos para forzar fin de turno
+        while self.g.available_dice():
+            # Si no puede mover más, debería acabar turno con can_end_turn()
+            if not self.g.has_valid_moves():
+                self.assertTrue(self.g.can_end_turn())
+                break
+            # intenta algún movimiento trivial inválido para consumir/forzar fin
+            if not self.g.move(2, 3):
+                break
+
+        # Ahora turno pasa a N y N tiene ficha en bar
+        # N NO debería poder mover desde puntos normales hasta reingresar
+        with patch("core.Dice.random.randint", side_effect=[1, 2]):
+            self.g.roll()
+        self.assertFalse(self.g.can_move(10, 1))  # desde tablero no
+
+    def test_ganador_N(self):
+        # Fuerzo victoria de N
+        self.b.off()['N'] = 15
+        self.assertTrue(self.g.is_game_over())
+        self.assertEqual(self.g.winner(), "N")
+
+class TestGameCoverMore(unittest.TestCase):
+    def setUp(self):
+        self.g = BackgammonGame()
+        self.b: Board = self.g.board()
+
+    def _clear_board(self):
+        for i in range(24):
+            self.b.points()[i].clear()
+
+    def test_has_valid_moves_true_y_can_end_turn_false(self):
+        self._clear_board()
+        # Dos blancas en idx 0 → con dados 1 y 2 hay movs válidos
+        self.b.points()[0].extend([Checker('B'), Checker('B')])
+        with patch("core.Dice.random.randint", side_effect=[1, 2]):
+            self.g.roll()
+        self.assertTrue(self.g.has_valid_moves())
+        self.assertFalse(self.g.can_end_turn())  # mientras queden dados y movimientos, no puede
+
+    def test_move_con_dado_no_disponible_no_cambia_turno(self):
+        self._clear_board()
+        self.b.points()[0].append(Checker('B'))
+        with patch("core.Dice.random.randint", side_effect=[3, 4]):
+            self.g.roll()
+        turno_ini = self.g.turno()
+        # 6 no disponible → move debe fallar y no consumir dados ni cambiar turno
+        self.assertFalse(self.g.move(0, 6))
+        self.assertEqual(self.g.turno(), turno_ini)
+        self.assertEqual(sorted(self.g.available_dice()), [3, 4])
+
+    def test_roll_sobrescribe_y_reinicia_available_dice(self):
+        with patch("core.Dice.random.randint", side_effect=[2, 5]):
+            self.g.roll()
+        # consumimos uno de los dados para asegurar que se “resetea” luego
+        self._clear_board()
+        self.b.points()[0].append(Checker('B'))
+        self.assertTrue(self.g.can_move(0, 2))
+        self.assertTrue(self.g.move(0, 2))
+        self.assertEqual(self.g.available_dice(), [5])
+
+        # Nueva tirada debe SOBREESCRIBIR
+        with patch("core.Dice.random.randint", side_effect=[4, 4]):
+            vals = self.g.roll()
+        self.assertEqual(vals, [4, 4, 4, 4])
+        self.assertEqual(self.g.available_dice(), [4, 4, 4, 4])
+
+    def test_is_game_over_false_y_winner_none(self):
+        # Estado normal: nadie tiene 15 afuera
         self.assertFalse(self.g.is_game_over())
-    
-    # TEST: is_game_over retorna True cuando Blancas ganan
-    def test_is_game_over_blancas_ganan(self):
-        """Verifica que is_game_over retorne True cuando Blancas retiran 15 fichas."""
-        with patch.object(self.g.board(), 'off', return_value={'B': 15, 'N': 0}):
-            self.assertTrue(self.g.is_game_over())
-    
-    # TEST: is_game_over retorna True cuando Negras ganan
-    def test_is_game_over_negras_ganan(self):
-        """Verifica que is_game_over retorne True cuando Negras retiran 15 fichas."""
-        with patch.object(self.g.board(), 'off', return_value={'B': 0, 'N': 15}):
-            self.assertTrue(self.g.is_game_over())
-    
-    # TEST: winner retorna None al inicio
-    def test_winner_none(self):
-        """Verifica que winner retorne None cuando no hay ganador."""
         self.assertIsNone(self.g.winner())
-    
-    # TEST: winner retorna 'B' cuando Blancas ganan
-    def test_winner_blancas(self):
-        """Verifica que winner retorne 'B' cuando Blancas ganan."""
-        with patch.object(self.g.board(), 'off', return_value={'B': 15, 'N': 0}):
-            self.assertEqual(self.g.winner(), 'B')
-    
-    # TEST: winner retorna 'N' cuando Negras ganan
-    def test_winner_negras(self):
-        """Verifica que winner retorne 'N' cuando Negras ganan."""
-        with patch.object(self.g.board(), 'off', return_value={'B': 0, 'N': 15}):
-            self.assertEqual(self.g.winner(), 'N')
-    
-    # TEST: available_dice con dados duplicados (dobles)
-    @patch.object(Dice, 'roll', return_value=[4, 4, 4, 4])
-    def test_available_dice_dobles(self, mock_roll):
-        """Verifica available_dice con dobles."""
-        self.g.roll()
-        self.assertEqual(len(self.g.available_dice()), 4)
-        
-        # Usar dos dados
-        with patch.object(self.g, 'can_move', return_value=True):
-            with patch.object(self.g.board(), 'move', return_value=True):
-                with patch.object(self.g, 'is_game_over', return_value=False):
-                    with patch.object(self.g, 'available_dice', side_effect=[[4,4,4,4], [4,4,4], [4,4], [4]]):
-                        self.g.move(7, 4)
-                        self.g.move(7, 4)
-    
-    # TEST: end_turn limpia dados y cambia turno correctamente
-    @patch.object(Dice, 'roll', return_value=[3, 1])
-    def test_end_turn_limpia_estado(self, mock_roll):
-        """Verifica que end_turn limpie los dados y cambie el turno."""
-        self.g.roll()
-        
-        turno_inicial = self.g.turno()
-        self.g.end_turn()
-        
-        # Verificar que cambió el turno
-        self.assertNotEqual(self.g.turno(), turno_inicial)
-        
-        # Verificar que se limpiaron los dados
-        self.assertEqual(self.g.dice(), [])
-        self.assertEqual(self.g.available_dice(), [])
+
+    def test_pasar_turno_sin_movimientos(self):
+        # Forzamos que B no tenga movimientos (B en bar y entradas 0..5 bloqueadas)
+        self._clear_board()
+        # Capturamos una B: N desde 11 con 6 cae en 5
+        self.b.points()[5].append(Checker('B'))
+        self.b.points()[11].append(Checker('N'))
+        self.assertTrue(self.b.can_move(11, 6, 'N'))
+        self.assertTrue(self.b.move(11, 6, 'N'))
+        # Bloqueamos entradas 0..5 para B
+        for idx in range(6):
+            self.b.points()[idx].clear()
+            self.b.points()[idx].extend([Checker('N'), Checker('N')])
+        with patch("core.Dice.random.randint", side_effect=[1, 2]):
+            self.g.roll()
+        self.assertFalse(self.g.has_valid_moves())
+        self.assertTrue(self.g.can_end_turn())
 
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
 """
-Backgammon con Pygame - Interfaz grÃ¡fica
+Backgammon con Pygame - Interfaz grafica
 Layout estandar de backgammon
 """
 
