@@ -1,10 +1,1 @@
-Name                     Stmts   Miss  Cover   Missing
-------------------------------------------------------
-cli/CLI.py                 169      1    99%   216
-core/BackgammonGame.py     103     13    87%   22, 29, 84, 91, 120, 129, 135-138, 146-148, 154, 156
-core/Board.py              109     14    87%   34, 56, 69, 78-89, 127, 138
-core/Checker.py              5      0   100%
-core/Dice.py                13      0   100%
-core/Player.py              16      0   100%
-------------------------------------------------------
-TOTAL                      415     28    93%
+No source for code: '/home/runner/work/computacion-2025-backgammon-pilarmachinea/computacion-2025-backgammon-pilarmachinea/cli/CLI.py'.
