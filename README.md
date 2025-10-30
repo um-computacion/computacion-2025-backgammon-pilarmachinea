@@ -114,7 +114,6 @@ Ser el primero en mover todas las fichas a tu zona home y sacarlas del tablero.
 - **Bearing Off**: Cuando todas las fichas están en home (0-5 para blancas, 18-23 para negras), puedes sacarlas del tablero
 
 ## Controles
-
 ### CLI
 - Comandos de texto para interactuar con el juego
 
@@ -126,7 +125,6 @@ Ser el primero en mover todas las fichas a tu zona home y sacarlas del tablero.
 - **ESC**: Salir
 
 ## Arquitectura
-
 El proyecto sigue los principios SOLID:
 - **S**ingle Responsibility: Cada clase tiene una única responsabilidad
 - **O**pen/Closed: Abierto a extensión, cerrado a modificación
