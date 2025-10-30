@@ -1,0 +1,228 @@
+# Automated Reports
+
+## Coverage Report
+```text
+Name                           Stmts   Miss  Cover   Missing
+------------------------------------------------------------
+cli/__init__.py                    7      0   100%
+core/BackgammonGame.py           103     13    87%   22, 29, 84, 91, 120, 129, 135-138, 146-148, 154, 156
+core/Board.py                    109     14    87%   34, 56, 69, 78-89, 127, 138
+core/Checker.py                    5      0   100%
+core/Dice.py                      13      0   100%
+core/Player.py                    16      0   100%
+core/__init__.py                   0      0   100%
+pygame_ui/PygameUI.py            448    405    10%   43-54, 66-92, 96-126, 130, 135, 140-160, 164-198, 204-316, 321-346, 350-408, 412-424, 428-467, 471-557, 561-671, 674-678, 682
+pygame_ui/__init__.py              0      0   100%
+tests/__init__.py                  0      0   100%
+tests/test_backgammongame.py     163      4    98%   66, 147-148, 235
+tests/test_board.py              162      1    99%   229
+tests/test_checker.py              8      1    88%   10
+tests/test_dice.py                36      1    97%   50
+tests/test_player.py              49      1    98%   68
+------------------------------------------------------------
+TOTAL                           1119    440    61%
+
+```
+
+## Pylint Report
+```text
+************* Module computacion-2025-backgammon-pilarmachinea.main
+main.py:122:24: C0303: Trailing whitespace (trailing-whitespace)
+main.py:147:27: C0303: Trailing whitespace (trailing-whitespace)
+main.py:157:55: C0303: Trailing whitespace (trailing-whitespace)
+main.py:187:0: C0304: Final newline missing (missing-final-newline)
+main.py:6:0: E0401: Unable to import 'core.BackgammonGame' (import-error)
+main.py:10:4: C0415: Import outside toplevel (os) (import-outside-toplevel)
+main.py:20:4: C0104: Disallowed name "bar" (disallowed-name)
+main.py:116:8: R1705: Unnecessary "else" after "return", remove the "else" and de-indent the code inside it (no-else-return)
+main.py:145:11: R1714: Consider merging these comparisons with 'in' by using 'comando in ('q', 'quit')'. Use a set instead if elements are hashable. (consider-using-in)
+main.py:148:13: R1714: Consider merging these comparisons with 'in' by using 'comando in ('r', 'roll')'. Use a set instead if elements are hashable. (consider-using-in)
+main.py:158:13: R1714: Consider merging these comparisons with 'in' by using 'comando in ('v', 'ver')'. Use a set instead if elements are hashable. (consider-using-in)
+main.py:161:13: R1714: Consider merging these comparisons with 'in' by using 'comando in ('t', 'terminar')'. Use a set instead if elements are hashable. (consider-using-in)
+main.py:181:11: W0718: Catching too general exception Exception (broad-exception-caught)
+main.py:183:8: C0415: Import outside toplevel (traceback) (import-outside-toplevel)
+************* Module computacion-2025-backgammon-pilarmachinea.core
+core/__init__.py:1:0: C0305: Trailing newlines (trailing-newlines)
+************* Module computacion-2025-backgammon-pilarmachinea.core.Player
+core/Player.py:7:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Player.py:22:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Player.py:68:0: C0304: Final newline missing (missing-final-newline)
+core/Player.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+core/Player.py:1:0: C0103: Module name "Player" doesn't conform to snake_case naming style (invalid-name)
+************* Module computacion-2025-backgammon-pilarmachinea.core.BackgammonGame
+core/BackgammonGame.py:33:0: C0303: Trailing whitespace (trailing-whitespace)
+core/BackgammonGame.py:36:0: C0303: Trailing whitespace (trailing-whitespace)
+core/BackgammonGame.py:54:0: C0303: Trailing whitespace (trailing-whitespace)
+core/BackgammonGame.py:59:0: C0303: Trailing whitespace (trailing-whitespace)
+core/BackgammonGame.py:65:0: C0303: Trailing whitespace (trailing-whitespace)
+core/BackgammonGame.py:67:0: C0303: Trailing whitespace (trailing-whitespace)
+core/BackgammonGame.py:77:0: C0303: Trailing whitespace (trailing-whitespace)
+core/BackgammonGame.py:81:0: C0303: Trailing whitespace (trailing-whitespace)
+core/BackgammonGame.py:85:0: C0303: Trailing whitespace (trailing-whitespace)
+core/BackgammonGame.py:88:31: C0303: Trailing whitespace (trailing-whitespace)
+core/BackgammonGame.py:89:0: C0303: Trailing whitespace (trailing-whitespace)
+core/BackgammonGame.py:92:0: C0303: Trailing whitespace (trailing-whitespace)
+core/BackgammonGame.py:112:0: C0301: Line too long (123/100) (line-too-long)
+core/BackgammonGame.py:113:0: C0301: Line too long (104/100) (line-too-long)
+core/BackgammonGame.py:114:0: C0303: Trailing whitespace (trailing-whitespace)
+core/BackgammonGame.py:117:0: C0303: Trailing whitespace (trailing-whitespace)
+core/BackgammonGame.py:121:0: C0303: Trailing whitespace (trailing-whitespace)
+core/BackgammonGame.py:150:0: C0303: Trailing whitespace (trailing-whitespace)
+core/BackgammonGame.py:154:24: C0303: Trailing whitespace (trailing-whitespace)
+core/BackgammonGame.py:166:0: C0303: Trailing whitespace (trailing-whitespace)
+core/BackgammonGame.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+core/BackgammonGame.py:1:0: C0103: Module name "BackgammonGame" doesn't conform to snake_case naming style (invalid-name)
+core/BackgammonGame.py:5:0: C0115: Missing class docstring (missing-class-docstring)
+core/BackgammonGame.py:19:8: R1705: Unnecessary "else" after "return", remove the "else" and de-indent the code inside it (no-else-return)
+core/BackgammonGame.py:26:8: R1705: Unnecessary "else" after "return", remove the "else" and de-indent the code inside it (no-else-return)
+core/BackgammonGame.py:31:4: C0116: Missing function or method docstring (missing-function-docstring)
+core/BackgammonGame.py:34:4: C0116: Missing function or method docstring (missing-function-docstring)
+core/BackgammonGame.py:37:4: C0116: Missing function or method docstring (missing-function-docstring)
+core/BackgammonGame.py:43:4: C0116: Missing function or method docstring (missing-function-docstring)
+core/BackgammonGame.py:46:4: C0116: Missing function or method docstring (missing-function-docstring)
+core/BackgammonGame.py:120:15: E1101: Instance of 'Board' has no 'get_valid_moves' member (no-member)
+core/BackgammonGame.py:136:19: W0718: Catching too general exception Exception (broad-exception-caught)
+core/BackgammonGame.py:146:23: W0718: Catching too general exception Exception (broad-exception-caught)
+************* Module computacion-2025-backgammon-pilarmachinea.core.Dice
+core/Dice.py:10:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Dice.py:47:0: C0304: Final newline missing (missing-final-newline)
+core/Dice.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+core/Dice.py:1:0: C0103: Module name "Dice" doesn't conform to snake_case naming style (invalid-name)
+************* Module computacion-2025-backgammon-pilarmachinea.core.Board
+core/Board.py:6:41: C0303: Trailing whitespace (trailing-whitespace)
+core/Board.py:24:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Board.py:57:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Board.py:59:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Board.py:68:0: C0325: Unnecessary parens after 'not' keyword (superfluous-parens)
+core/Board.py:70:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Board.py:93:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Board.py:95:0: C0325: Unnecessary parens after 'not' keyword (superfluous-parens)
+core/Board.py:97:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Board.py:101:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Board.py:106:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Board.py:111:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Board.py:113:0: C0325: Unnecessary parens after 'not' keyword (superfluous-parens)
+core/Board.py:115:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Board.py:119:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Board.py:123:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Board.py:135:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Board.py:137:0: C0325: Unnecessary parens after 'not' keyword (superfluous-parens)
+core/Board.py:139:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Board.py:146:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Board.py:155:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Board.py:163:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Board.py:166:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Board.py:172:0: C0303: Trailing whitespace (trailing-whitespace)
+core/Board.py:177:0: C0304: Final newline missing (missing-final-newline)
+core/Board.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+core/Board.py:1:0: C0103: Module name "Board" doesn't conform to snake_case naming style (invalid-name)
+core/Board.py:3:0: C0115: Missing class docstring (missing-class-docstring)
+core/Board.py:30:4: C0116: Missing function or method docstring (missing-function-docstring)
+core/Board.py:33:4: C0116: Missing function or method docstring (missing-function-docstring)
+core/Board.py:33:4: C0104: Disallowed name "bar" (disallowed-name)
+core/Board.py:36:4: C0116: Missing function or method docstring (missing-function-docstring)
+core/Board.py:39:4: C0116: Missing function or method docstring (missing-function-docstring)
+core/Board.py:46:4: C0116: Missing function or method docstring (missing-function-docstring)
+core/Board.py:78:8: R1705: Unnecessary "else" after "return", remove the "else" and de-indent the code inside it (no-else-return)
+core/Board.py:91:4: R0911: Too many return statements (10/6) (too-many-return-statements)
+************* Module computacion-2025-backgammon-pilarmachinea.core.Checker
+core/Checker.py:3:30: C0303: Trailing whitespace (trailing-whitespace)
+core/Checker.py:6:0: C0304: Final newline missing (missing-final-newline)
+core/Checker.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+core/Checker.py:1:0: C0103: Module name "Checker" doesn't conform to snake_case naming style (invalid-name)
+core/Checker.py:1:0: C0115: Missing class docstring (missing-class-docstring)
+core/Checker.py:5:4: C0116: Missing function or method docstring (missing-function-docstring)
+core/Checker.py:1:0: R0903: Too few public methods (1/2) (too-few-public-methods)
+************* Module computacion-2025-backgammon-pilarmachinea.tests.test_dice
+tests/test_dice.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+tests/test_dice.py:3:0: E0401: Unable to import 'core.Dice' (import-error)
+tests/test_dice.py:6:0: C0115: Missing class docstring (missing-class-docstring)
+tests/test_dice.py:7:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_dice.py:11:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_dice.py:23:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_dice.py:30:0: C0115: Missing class docstring (missing-class-docstring)
+tests/test_dice.py:31:4: C0116: Missing function or method docstring (missing-function-docstring)
+************* Module computacion-2025-backgammon-pilarmachinea.tests.test_player
+tests/test_player.py:24:0: C0303: Trailing whitespace (trailing-whitespace)
+tests/test_player.py:28:0: C0303: Trailing whitespace (trailing-whitespace)
+tests/test_player.py:56:0: C0303: Trailing whitespace (trailing-whitespace)
+tests/test_player.py:59:0: C0303: Trailing whitespace (trailing-whitespace)
+tests/test_player.py:63:0: C0303: Trailing whitespace (trailing-whitespace)
+tests/test_player.py:68:0: C0304: Final newline missing (missing-final-newline)
+tests/test_player.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+tests/test_player.py:2:0: E0401: Unable to import 'core.Player' (import-error)
+tests/test_player.py:4:0: C0115: Missing class docstring (missing-class-docstring)
+tests/test_player.py:5:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_player.py:9:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_player.py:13:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_player.py:17:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_player.py:21:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_player.py:25:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_player.py:29:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_player.py:33:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_player.py:38:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_player.py:43:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_player.py:47:4: C0116: Missing function or method docstring (missing-function-docstring)
+************* Module computacion-2025-backgammon-pilarmachinea.tests.test_backgammongame
+tests/test_backgammongame.py:142:0: C0301: Line too long (108/100) (line-too-long)
+tests/test_backgammongame.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+tests/test_backgammongame.py:3:0: E0401: Unable to import 'core.BackgammonGame' (import-error)
+tests/test_backgammongame.py:4:0: E0401: Unable to import 'core.Board' (import-error)
+tests/test_backgammongame.py:5:0: E0401: Unable to import 'core.Checker' (import-error)
+tests/test_backgammongame.py:7:0: C0115: Missing class docstring (missing-class-docstring)
+tests/test_backgammongame.py:8:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_backgammongame.py:16:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_backgammongame.py:25:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_backgammongame.py:48:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_backgammongame.py:68:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_backgammongame.py:84:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_backgammongame.py:92:0: C0115: Missing class docstring (missing-class-docstring)
+tests/test_backgammongame.py:101:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_backgammongame.py:124:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_backgammongame.py:131:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_backgammongame.py:159:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_backgammongame.py:159:4: C0103: Method name "test_ganador_N" doesn't conform to snake_case naming style (invalid-name)
+tests/test_backgammongame.py:165:0: C0115: Missing class docstring (missing-class-docstring)
+tests/test_backgammongame.py:174:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_backgammongame.py:183:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_backgammongame.py:194:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_backgammongame.py:210:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_backgammongame.py:215:4: C0116: Missing function or method docstring (missing-function-docstring)
+************* Module computacion-2025-backgammon-pilarmachinea.tests.test_checker
+tests/test_checker.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+tests/test_checker.py:2:0: E0401: Unable to import 'core.Checker' (import-error)
+tests/test_checker.py:4:0: C0115: Missing class docstring (missing-class-docstring)
+tests/test_checker.py:5:4: C0116: Missing function or method docstring (missing-function-docstring)
+************* Module computacion-2025-backgammon-pilarmachinea.tests.test_board
+tests/test_board.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+tests/test_board.py:2:0: E0401: Unable to import 'core.Board' (import-error)
+tests/test_board.py:3:0: E0401: Unable to import 'core.Checker' (import-error)
+tests/test_board.py:5:0: C0115: Missing class docstring (missing-class-docstring)
+tests/test_board.py:6:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_board.py:6:4: R0914: Too many local variables (18/15) (too-many-locals)
+tests/test_board.py:26:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_board.py:47:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_board.py:69:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_board.py:89:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_board.py:96:0: C0115: Missing class docstring (missing-class-docstring)
+tests/test_board.py:104:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_board.py:126:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_board.py:144:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_board.py:152:0: C0115: Missing class docstring (missing-class-docstring)
+tests/test_board.py:160:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_board.py:160:4: C0103: Method name "test_reingreso_bloqueado_por_dos_para_B" doesn't conform to snake_case naming style (invalid-name)
+tests/test_board.py:177:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_board.py:177:4: C0103: Method name "test_reingreso_con_captura_desde_bar_para_B" doesn't conform to snake_case naming style (invalid-name)
+tests/test_board.py:192:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_board.py:197:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_board.py:204:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_board.py:210:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_board.py:210:4: C0103: Method name "test_no_bear_off_si_no_todas_en_casa_B" doesn't conform to snake_case naming style (invalid-name)
+tests/test_board.py:218:4: C0116: Missing function or method docstring (missing-function-docstring)
+tests/test_board.py:218:4: C0103: Method name "test_no_bear_off_si_no_todas_en_casa_N" doesn't conform to snake_case naming style (invalid-name)
+
+------------------------------------------------------------------
+Your code has been rated at 7.26/10 (previous run: 6.92/10, +0.33)
+
+
+```

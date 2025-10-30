@@ -1,4 +1,4 @@
-name: CI with Coverage
+name: CI with Coverage and Pylint
 
 on:
   push:
@@ -38,10 +38,15 @@ jobs:
           coverage run -m unittest discover
           coverage xml -o cobertura.xml
           coverage report -m > coverage_report.txt
+          echo "Coverage report generated:"
+          tail -n 10 coverage_report.txt
 
       - name: Run Pylint and generate report
         run: |
-          pylint --rcfile=.pylintrc main.py > pylint_report.txt || true
+          # Ejecuta pylint y guarda toda la salida en un archivo
+          pylint --rcfile=.pylintrc main.py core tests > pylint_report.txt || true
+          echo "Pylint report generated:"
+          tail -n 10 pylint_report.txt
 
       - name: Generate reports file
         run: |
@@ -75,6 +80,7 @@ jobs:
           EOF
 
           python generate_reports.py
+          echo "REPORTS.md generated successfully."
 
       - name: Create Pull Request for reports
         if: github.ref == 'refs/heads/main'
@@ -87,24 +93,29 @@ jobs:
           body: |
             🤖 **Automated report update**
 
-            This PR updates the REPORTS.md file with the latest:
-            - Coverage report
-            - Pylint analysis
+            This PR updates the following files with the latest data:
+            - REPORTS.md
+            - coverage_report.txt
+            - pylint_report.txt
 
             Generated automatically by GitHub Actions.
           branch: update-reports
           delete-branch: true
           base: main
+          add-paths: |
+            REPORTS.md
+            pylint_report.txt
+            coverage_report.txt
 
       - name: Auto-merge Pull Request
         if: steps.cpr.outputs.pull-request-operation == 'created'
         run: |
           # Esperar un momento para que el PR esté completamente creado
           sleep 5
-          # Intentar mergear automáticamente
+          # Intentar mergear automáticamente (si el bot tiene permisos)
           gh pr merge ${{ steps.cpr.outputs.pull-request-number }} \
             --squash \
             --delete-branch \
-            --admin
+            --admin || true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
