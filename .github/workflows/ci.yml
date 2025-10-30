@@ -101,7 +101,7 @@ jobs:
         run: |
           # Esperar un momento para que el PR esté completamente creado
           sleep 5
-          # Habilitar auto-merge y mergear inmediatamente
+          # Intentar mergear automáticamente
           gh pr merge ${{ steps.cpr.outputs.pull-request-number }} \
             --squash \
             --delete-branch \
