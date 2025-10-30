@@ -28,4 +28,6 @@ min-public-methods=2
 
 [REPORTS]
 # Disable the generation of reports.
-reports=no
+reports=noets.GITHUB_TOKEN }}
+          commit-message: 'docs: Update automated reports [skip ci]'
+          title: 'Automated
