@@ -1,5 +1,5 @@
 # Backgammon - Computación 2025
-Implementación del juego de Backgammon en Python con interfaces CLI y gráfica (Pygame).
+Implementación del juego de Backgammon en Python con interfaces CLI y gráfica (Pygame)
 
 ## Estructura del Proyecto
 ```
@@ -22,9 +22,7 @@ backgammon/
 │   ├── test_player.py
 │   ├── test_dice.py
 │   └── test_checker.py
-├── assets/                # Recursos multimedia
-│   ├── images/
-│   └── sounds/
+│
 ├── requirements.txt
 ├── CHANGELOG.md
 ├── JUSTIFICACION.md
