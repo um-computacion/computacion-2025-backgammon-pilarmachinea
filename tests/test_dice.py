@@ -34,17 +34,14 @@ class TestDiceExtra(unittest.TestCase):
             v1 = d.roll()
         self.assertEqual(v1, [2, 5])
         self.assertEqual(d.last(), [2, 5])
-
         # Siguiente tirada cambia los valores
         with patch("core.Dice.random.randint", return_value=4):
             v2 = d.roll()  # dobles
         self.assertEqual(v2, [4, 4, 4, 4])
         self.assertEqual(d.last(), [4, 4, 4, 4])
-
         # Mutar el retorno no debe afectar el estado interno
         v2.append(99)
         self.assertEqual(d.last(), [4, 4, 4, 4])
-
 
 if __name__ == "__main__":
     unittest.main()

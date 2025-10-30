@@ -220,6 +220,7 @@ El objetivo es cubrir principalmente la **lógica de juego**, ya que la interfaz
 - Añadir **sonidos y animaciones** en Pygame.  
 - Tests de integración para partidas completas.  
 - Excepciones específicas para errores de movimiento.  
+- Agregar poder jugar contra el ordenador o una IA
 
 ---
 

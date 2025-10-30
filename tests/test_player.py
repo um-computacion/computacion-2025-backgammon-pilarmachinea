@@ -53,14 +53,11 @@ class TestPlayer(unittest.TestCase):
         # Verificar que el constructor lanza ValueError
         with self.assertRaises(ValueError):
             Player("rojo")
-        
         with self.assertRaises(ValueError):
             Player(123)
-        
         # Pruebas con strings vacíos o con espacios (debe fallar)
         with self.assertRaises(ValueError):
             Player("")
-        
         with self.assertRaises(ValueError):
             Player(" ")
 
