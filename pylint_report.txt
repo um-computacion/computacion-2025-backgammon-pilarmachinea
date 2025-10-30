@@ -9,5 +9,5 @@ core/Board.py:137:0: C0325: Unnecessary parens after 'not' keyword (superfluous-
 core/Checker.py:1:0: R0903: Too few public methods (1/2) (too-few-public-methods)
 
 ------------------------------------------------------------------
-Your code has been rated at 9.74/10 (previous run: 7.16/10, +2.58)
+Your code has been rated at 9.74/10 (previous run: 9.74/10, +0.00)
 
