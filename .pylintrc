@@ -1,0 +1,65 @@
+[MASTER]
+# Permite que Pylint encuentre los módulos dentro de tu proyecto
+init-hook='import sys; sys.path.append(".")'
+
+# Ignora carpetas innecesarias
+ignore=venv,.venv,pygame_ui
+ignore-patterns=test_.*
+
+[MESSAGES CONTROL]
+# Desactiva advertencias que no afectan la calidad real del código
+disable=
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    invalid-name,
+    broad-exception-caught,
+    too-many-arguments,
+    too-many-locals,
+    too-many-public-methods,
+    too-many-return-statements,
+    too-many-branches,
+    no-else-return,
+    import-error,
+    consider-using-in,
+    line-too-long,
+    trailing-whitespace,
+    missing-final-newline,
+    trailing-newlines,
+    unused-argument,
+    unused-variable,
+    unused-import,
+    import-outside-toplevel,
+    disallowed-name
+
+[FORMAT]
+# Permite líneas un poco más largas
+max-line-length=120
+# Indentación estándar
+indent-string='    '
+
+[DESIGN]
+# Límite de complejidad — tus valores originales
+max-args=5
+max-statements=50
+max-locals=15
+max-returns=6
+max-branches=12
+max-nested-blocks=5
+max-public-methods=20
+max-attributes=7
+min-public-methods=2
+
+[REPORTS]
+# No genera reporte HTML, solo el score
+reports=no
+
+[BASIC]
+# Palabras que no deben ser penalizadas por estilo
+good-names=i,j,k,x,y,z,id,_,N,B
+# Permite nombres tipo "BackgammonGame"
+module-rgx=[A-Za-z_][A-Za-z0-9_]*
+
+[TYPECHECK]
+# Evita falsos positivos en imports relativos
+ignored-modules=core,cli,pygame_ui
